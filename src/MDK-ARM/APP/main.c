@@ -14,8 +14,13 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "py32f0xx.h"
+
 #include "app_main.h"
+
 /* Private define ------------------------------------------------------------*/
+// #define HSI_FREQ             8000000
+#define HSI_FREQ            24000000
 #define UART_TX_BUF_SIZE    32
 #define UART_RX_BUF_SIZE    32
 
@@ -35,6 +40,7 @@ __IO uint16_t RxCount = 0;
 
 __IO ITStatus UartReady = RESET;
 
+extern uint32_t SystemCoreClock;
 /* Private function prototypes -----------------------------------------------*/
 static void APP_SystemClockConfig(void);
 static void APP_ConfigUsart(USART_TypeDef *USARTx);
@@ -80,10 +86,26 @@ int main(void)
   */
 static void APP_SystemClockConfig(void)
 {
-    /* Enable HSI */
+    uint32_t fact_hsi_trim_val;
+    uint32_t reg;
+
+#if 0
+    // [工場出荷時のHSIのトリム値を読み出し]
+    fact_hsi_trim_val = REG_READ_DWORD(0x1FFF0FA0, 0) & 0x00001FFF;
+    reg = READ_REG(RCC->ICSCR);
+    reg = reg & ~0x00001FFF;
+    reg = reg | fact_hsi_trim_val;
+    WRITE_REG(RCC->ICSCR, reg);
+#endif
+
+    // [内部RCクロックのHSIを8MHzら24MHzに変更]
     LL_RCC_HSI_Enable();
+#if (HSI_FREQ == 24000000)
+    LL_RCC_HSI_SetCalibFreq(LL_RCC_HSICALIBRATION_24MHz);
+#endif
     while(LL_RCC_HSI_IsReady() != 1)
     {
+        NOP();
     }
 
     /* Set AHB prescaler*/
@@ -93,14 +115,15 @@ static void APP_SystemClockConfig(void)
     LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_HSISYS);
     while(LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_HSISYS)
     {
+        NOP();
     }
 
     /* Set APB1 prescaler*/
     LL_RCC_SetAPB1Prescaler(LL_RCC_APB1_DIV_1);
-    LL_Init1msTick(8000000);
+    LL_Init1msTick(HSI_FREQ);
 
     /* Update system clock global variable SystemCoreClock (can also be updated by calling SystemCoreClockUpdate function) */
-    LL_SetSystemCoreClock(8000000);
+    LL_SetSystemCoreClock(HSI_FREQ);
 }
 
 /**
@@ -287,6 +310,7 @@ void APP_ErrorHandler(void)
     /* infinite loop */
     while (1)
     {
+        NOP();
     }
 }
 
@@ -305,6 +329,7 @@ void assert_failed(uint8_t *file, uint32_t line)
     /* infinite loop */
     while (1)
     {
+        NOP();
     }
 }
 #endif /* USE_FULL_ASSERT */

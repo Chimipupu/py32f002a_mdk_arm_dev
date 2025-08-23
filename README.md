@@ -1,9 +1,9 @@
-# 世界最安級 15円 ARMマイコン PY32F002A 評価F/W開発
+# 15円 ARMマイコン PY32F002A 評価F/W開発
 
-1石15円の世界最安級ARMマイコン PY32F002Aの評価F/W個人開発リポジトリ
+1石15円の世界最安級?なARMマイコン PY32F002Aの評価F/W個人開発リポジトリ
 
 <div align="center">
-  <img width="200" src="/doc/IMG_20250823_134712.jpg">
+  <img src="/doc/py32f002a_bread_board.png">
 </div>
 
 ## 開発環境
