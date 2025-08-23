@@ -100,6 +100,22 @@ void USART1_IRQHandler(void)
   APP_UsartIRQCallback(USART1);
 }
 
+#if defined(I_AGREE_TO_YOUR_DISCLAIMER)
 
+void DMA1_Channel1_IRQHandler(void)
+{
+  if(LL_DMA_IsActiveFlag_TE1(DMA1) == 1)
+  {
+    LL_DMA_ClearFlag_TE1(DMA1);
+    APP_TransferErrorCallback();
+  }
+
+  if(LL_DMA_IsActiveFlag_TC1(DMA1) == 1)
+  {
+    LL_DMA_ClearFlag_GI1(DMA1);
+    APP_TransferCompleteCallback();
+  }
+}
+#endif
 
 /************************ (C) COPYRIGHT Puya *****END OF FILE****/
