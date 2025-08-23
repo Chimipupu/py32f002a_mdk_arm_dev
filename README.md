@@ -2,17 +2,20 @@
 
 1石15円の世界最安級?なARMマイコン PY32F002Aの評価F/W個人開発リポジトリ
 
-> [!CAUTION]
-> 【免責】<br> 本実装の利用は本免責に同意したものとみなし、<br>いかなる損害や問題、事故が発生してもすべて自己責任として、<br>私はその責任を一切の負いかねます。知らんがな。
-
 <div align="center">
   <img src="/doc/py32f002a_bread_board.png">
 </div>
 
+## 免責
+
+> [!CAUTION]
+> [免責事項1] : <br>本実装は個人開発のF/Wであり、<br> 本実装に対する技術的な質問、サポート、issues、プルリクエストには一切対応しません。<br><br> [免責事項2] : <br>本実装の個人の非営利、営利目的、商用利用などMITライセンス基づくものとします。
+<br> [免責事項3] :<br> 本実装の利用は本免責に同意したものとみなし、<br>いかなる損害や問題、事故が発生してもすべて自己責任として、<br>私はその責任を一切の負いかねます。<br>
+
 ## TIP
 
 > [!TIP]
-> [PY32F002AF15P6](https://www.py32.org/en/mcu/PY32F002Axx.html)🔗 a.k.a [PY32F030K16T6](https://www.py32.org/en/mcu/PY32F030xx.html#introduction)🔗というが判明www
+> [PY32F002AF15P6](https://www.py32.org/en/mcu/PY32F002Axx.html)🔗 a.k.a [PY32F030K16T6](https://www.py32.org/en/mcu/PY32F030xx.html#introduction)🔗ということがほぼ確定。<br><br>[個人的な推測]<br>PY32F030のスペックが満たないものか不具合のシリコンをPY32F002Aとして売ってる可能性はありそう。<br>もしそうなら日本円で15円っていうありえん値段でARMのマイコンが買えるのも腑に落ちる。
 
 - マイコン ... 型番 : [PY32F002AF15P6](https://www.py32.org/en/mcu/PY32F002Axx.html)🔗 a.k.a [PY32F030K16T6](https://www.py32.org/en/mcu/PY32F030xx.html#introduction)🔗
 
@@ -37,7 +40,7 @@
 
 - 評価基板
   - (TBD)
-  - ※基板はまだ作ってるからそれまでブレッドボードでwww
+  - ※基板完成まではブレッドボード
 
 ### S/W
 
