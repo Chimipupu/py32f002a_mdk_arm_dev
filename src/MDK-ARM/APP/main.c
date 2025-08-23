@@ -10,14 +10,20 @@
  */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "py32f002xx_ll_Start_Kit.h"
 
+#include <stdint.h>
+#include <string.h>
+
+#include "app_main.h"
 /* Private define ------------------------------------------------------------*/
+#define UART_TX_BUF_SIZE    32
+#define UART_RX_BUF_SIZE    32
 
 /* Private variables ---------------------------------------------------------*/
 const uint8_t uart_test_str_buf[] = "PY32F002A Dev By Chimipupu\r\n";
-// uint8_t aTxBuffer[32];
-uint8_t aRxBuffer[32];
+
+uint8_t aTxBuffer[UART_TX_BUF_SIZE];
+uint8_t aRxBuffer[UART_RX_BUF_SIZE];
 
 uint8_t *TxBuff = NULL;
 __IO uint16_t TxSize = 0;
@@ -32,8 +38,6 @@ __IO ITStatus UartReady = RESET;
 /* Private function prototypes -----------------------------------------------*/
 static void APP_SystemClockConfig(void);
 static void APP_ConfigUsart(USART_TypeDef *USARTx);
-static void APP_UsartTransmit_IT(USART_TypeDef *USARTx, uint8_t *pData, uint16_t Size);
-static void APP_UsartReceive_IT(USART_TypeDef *USARTx, uint8_t *pData, uint16_t Size);
 
 /**
   * @brief  Main program.
@@ -45,16 +49,26 @@ int main(void)
     /* Configure system clock */
     APP_SystemClockConfig();
 
-    /* Configure USART */
+    // クロック安定待ち
+    LL_mDelay(300);
+
+    // UART初期化
+    memset(aRxBuffer, 0x00, sizeof(aRxBuffer));
+    memset(aTxBuffer, 0x00, sizeof(aTxBuffer));
     APP_ConfigUsart(USART1);
     // LL_USART_SendAutoBaudRateReq(USART1);
+    // APP_UsartReceive_IT(USART1, (uint8_t *)aRxBuffer, 1);
 
-    /* Receive 1 character data for baud rate detection */
-    APP_UsartReceive_IT(USART1, (uint8_t *)aRxBuffer, 1);
+    // アプリ初期化
+    app_main_init();
 
     while (1)
     {
         APP_UsartTransmit_IT(USART1, (uint8_t *)uart_test_str_buf, sizeof(uart_test_str_buf));
+
+        // アプリメイン
+        app_main();
+
         LL_mDelay(1000);
     }
 }
@@ -165,14 +179,14 @@ static void APP_ConfigUsart(USART_TypeDef *USARTx)
   * @param  Size：Size of the transmit buffer
   * @retval None
   */
-static void APP_UsartTransmit_IT(USART_TypeDef *USARTx, uint8_t *pData, uint16_t Size)
+void APP_UsartTransmit_IT(USART_TypeDef *USARTx, uint8_t *pData, uint16_t Size)
 {
-        TxBuff = pData;
-        TxSize = Size;
-        TxCount = Size;
-        
-        /*Enable transmit data register empty interrupt*/
-        LL_USART_EnableIT_TXE(USARTx); 
+    TxBuff = pData;
+    TxSize = Size;
+    TxCount = Size;
+
+    /*Enable transmit data register empty interrupt*/
+    LL_USART_EnableIT_TXE(USARTx);
 }
 
 /**
@@ -182,20 +196,20 @@ static void APP_UsartTransmit_IT(USART_TypeDef *USARTx, uint8_t *pData, uint16_t
   * @param  Size：Size of the transmit buffer
   * @retval None
   */
-static void APP_UsartReceive_IT(USART_TypeDef *USARTx, uint8_t *pData, uint16_t Size)
+void APP_UsartReceive_IT(USART_TypeDef *USARTx, uint8_t *pData, uint16_t Size)
 {
-        RxBuff = pData;
-        RxSize = Size;
-        RxCount = Size;
-        
-        /*Enable parity error interrupt*/
-        LL_USART_EnableIT_PE(USARTx);
-    
-        /*Enable error interrupt*/
-        LL_USART_EnableIT_ERROR(USARTx);
-    
-        /*Enable receive data register not empty interrupt*/
-        LL_USART_EnableIT_RXNE(USARTx);
+    RxBuff = pData;
+    RxSize = Size;
+    RxCount = Size;
+
+    /*Enable parity error interrupt*/
+    LL_USART_EnableIT_PE(USARTx);
+
+    /*Enable error interrupt*/
+    LL_USART_EnableIT_ERROR(USARTx);
+
+    /*Enable receive data register not empty interrupt*/
+    LL_USART_EnableIT_RXNE(USARTx);
 }
 
 /**
@@ -205,71 +219,62 @@ static void APP_UsartReceive_IT(USART_TypeDef *USARTx, uint8_t *pData, uint16_t 
   */
 void APP_UsartIRQCallback(USART_TypeDef *USARTx)
 {
-        /*Receive data register not empty*/
-        uint32_t errorflags = (LL_USART_IsActiveFlag_PE(USARTx) | LL_USART_IsActiveFlag_FE(USARTx) |\
-                            LL_USART_IsActiveFlag_ORE(USARTx) | LL_USART_IsActiveFlag_NE(USARTx));
-        if (errorflags == RESET)
-        {
-            if ((LL_USART_IsActiveFlag_RXNE(USARTx) != RESET) && (LL_USART_IsEnabledIT_RXNE(USARTx) != RESET))
-            {
-                *RxBuff = LL_USART_ReceiveData8(USARTx);
-                RxBuff++;
-                
-                if (--RxCount == 0U)
-                {
-                    LL_USART_DisableIT_RXNE(USARTx);
-                    LL_USART_DisableIT_PE(USARTx);
-                    LL_USART_DisableIT_ERROR(USARTx);
-                }
-                
-                return;
-            }
-        }
-        
-        /*Receive error occurred*/
-        if (errorflags != RESET)
-        {
-        /* Used for auto baud rate detection */
+    /*Receive data register not empty*/
+    uint32_t errorflags = (LL_USART_IsActiveFlag_PE(USARTx) | LL_USART_IsActiveFlag_FE(USARTx) |\
+                        LL_USART_IsActiveFlag_ORE(USARTx) | LL_USART_IsActiveFlag_NE(USARTx));
+    if (errorflags == RESET)
+    {
         if ((LL_USART_IsActiveFlag_RXNE(USARTx) != RESET) && (LL_USART_IsEnabledIT_RXNE(USARTx) != RESET))
         {
             *RxBuff = LL_USART_ReceiveData8(USARTx);
             RxBuff++;
-            
+
             if (--RxCount == 0U)
             {
                 LL_USART_DisableIT_RXNE(USARTx);
                 LL_USART_DisableIT_PE(USARTx);
                 LL_USART_DisableIT_ERROR(USARTx);
             }
-            
             return;
         }
-        }
-        
-        /*Transmit data register empty*/
-        if ((LL_USART_IsActiveFlag_TXE(USARTx) != RESET) && (LL_USART_IsEnabledIT_TXE(USARTx) != RESET))
+    }
+
+    /*Receive error occurred*/
+    if (errorflags != RESET)
+    {
+    /* Used for auto baud rate detection */
+    if ((LL_USART_IsActiveFlag_RXNE(USARTx) != RESET) && (LL_USART_IsEnabledIT_RXNE(USARTx) != RESET))
+    {
+        *RxBuff = LL_USART_ReceiveData8(USARTx);
+        RxBuff++;
+        if (--RxCount == 0U)
         {
-            LL_USART_TransmitData8(USARTx, *TxBuff);
-            TxBuff++;
-            
-            if (--TxCount == 0U)
-            { 
-                LL_USART_DisableIT_TXE(USARTx);
-                
-                LL_USART_EnableIT_TC(USARTx);
-            }
-            
-            return;
+            LL_USART_DisableIT_RXNE(USARTx);
+            LL_USART_DisableIT_PE(USARTx);
+            LL_USART_DisableIT_ERROR(USARTx);
         }
-        
-        /*Transmission complete*/
-        if ((LL_USART_IsActiveFlag_TC(USARTx) != RESET) && (LL_USART_IsEnabledIT_TC(USARTx) != RESET))
+        return;
+    }
+    }
+    /*Transmit data register empty*/
+    if ((LL_USART_IsActiveFlag_TXE(USARTx) != RESET) && (LL_USART_IsEnabledIT_TXE(USARTx) != RESET))
+    {
+        LL_USART_TransmitData8(USARTx, *TxBuff);
+        TxBuff++;
+        if (--TxCount == 0U)
         {
-            LL_USART_DisableIT_TC(USARTx);
-        
-            return;
+            LL_USART_DisableIT_TXE(USARTx);
+            LL_USART_EnableIT_TC(USARTx);
         }
-        
+        return;
+    }
+
+    /*Transmission complete*/
+    if ((LL_USART_IsActiveFlag_TC(USARTx) != RESET) && (LL_USART_IsEnabledIT_TC(USARTx) != RESET))
+    {
+        LL_USART_DisableIT_TC(USARTx);
+        return;
+    }
 }
 
 /**

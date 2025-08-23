@@ -1,33 +1,13 @@
 /**
-  ******************************************************************************
-  * @file    main.h
-  * @author  MCU Application Team
-  * @brief   Header for main.c file.
-  *          This file contains the common defines of the application.
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2023 Puya Semiconductor Co.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by Puya under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
-  *
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2016 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
-  *
-  ******************************************************************************
-  */
+ * @file main.h
+ * @author Chimipupu(https://github.com/Chimipupu)
+ * @brief  PY32F002A メイン
+ * @version 0.1
+ * @date 2025-08-23
+ * 
+ * @copyright Copyright (c) 2025 Chimipupu All Rights Reserved.
+ * 
+ */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef __MAIN_H
@@ -52,11 +32,16 @@ extern "C" {
 #include "py32_assert.h"
 #endif /* USE_FULL_ASSERT */
 
+#define UART_TX_BUF_SIZE    32
+#define UART_RX_BUF_SIZE    32
+
 /* Private includes ----------------------------------------------------------*/
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions prototypes ---------------------------------------------*/
+void APP_UsartTransmit_IT(USART_TypeDef *USARTx, uint8_t *pData, uint16_t Size);
+void APP_UsartReceive_IT(USART_TypeDef *USARTx, uint8_t *pData, uint16_t Size);
 void APP_ErrorHandler(void);
 void APP_UsartIRQCallback(USART_TypeDef *USARTx);
 /* Private defines -----------------------------------------------------------*/

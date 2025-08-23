@@ -315,7 +315,7 @@
           </ArmAdsMisc>
           <Cads>
             <interw>1</interw>
-            <Optim>6</Optim>
+            <Optim>1</Optim>
             <oTime>0</oTime>
             <SplitLS>0</SplitLS>
             <OneElfS>1</OneElfS>
@@ -631,19 +631,19 @@
               <FilePath>.\APP\py32f0xx_it.h</FilePath>
             </File>
             <File>
-              <FileName>py32f002xx_ll_Start_Kit.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\APP\py32f002xx_ll_Start_Kit.c</FilePath>
-            </File>
-            <File>
-              <FileName>py32f002xx_ll_Start_Kit.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\APP\py32f002xx_ll_Start_Kit.h</FilePath>
-            </File>
-            <File>
               <FileName>system_py32f0xx.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\APP\system_py32f0xx.c</FilePath>
+            </File>
+            <File>
+              <FileName>app_main.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\APP\app_main.c</FilePath>
+            </File>
+            <File>
+              <FileName>app_main.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\APP\app_main.h</FilePath>
             </File>
           </Files>
         </Group>
