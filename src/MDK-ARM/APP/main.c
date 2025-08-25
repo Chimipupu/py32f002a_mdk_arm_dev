@@ -73,7 +73,7 @@ volatile static bool s_dma_transfer_fail_flg = false;
 static void APP_DmaConfig(void)
 {
     // PY32F002AF15P6のシリコンはPY32F030K16T6なので、
-    // DMAはCH1~CH3の3本が使える
+    // ないはずのDMAがCH1~CH3の3本使える
 
     LL_DMA_InitTypeDef dma_initstruct = {0};
 
