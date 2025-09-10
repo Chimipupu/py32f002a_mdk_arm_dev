@@ -12,7 +12,7 @@
 #include "main.h"
 
 static float s_math_pi;
-uint8_t s_tx_data_buf[16];
+uint8_t s_tx_data_buf[16] = {0};
 
 // ガウス・ルジャンドル法による円周率の計算
 float app_math_pi_calc(uint32_t cnt)
@@ -47,7 +47,7 @@ float app_math_pi_calc(uint32_t cnt)
 void app_main_init(void)
 {
     memset(s_tx_data_buf, 0x00, sizeof(s_tx_data_buf));
-    s_math_pi = 0;
+    s_math_pi = app_math_pi_calc(4);
 }
 
 /**
@@ -58,7 +58,7 @@ void app_main(void)
 {
     volatile int len;
 
-    s_math_pi = app_math_pi_calc(4);
-    len = sprintf((char *)&s_tx_data_buf[0], "pi=%f\r\n", s_math_pi);
+    len = sprintf((char *)&s_tx_data_buf[0], "pi = %f\r\n", s_math_pi);
     APP_UsartTransmit_IT(USART1, s_tx_data_buf, len);
+    LL_mDelay(1);
 }

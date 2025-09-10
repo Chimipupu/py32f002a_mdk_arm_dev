@@ -19,16 +19,18 @@
 #include "app_main.h"
 
 /* Private define ------------------------------------------------------------*/
-#define UART_TX_BUF_SIZE    32
-#define UART_RX_BUF_SIZE    32
-
 #define RTC_ASYNCH_PREDIV          ((uint32_t)0x7FFF)
 
 /* Private variables ---------------------------------------------------------*/
 const uint8_t uart_test_str_buf[] = "PY32F002A Dev By Chimipupu\r\n";
+const uint8_t g_lptim_irq_str[] = "LPTIM IRQ!\r\n";
+const uint8_t g_rtc_alarm[] = "RTC Alarm!\r\n";
+const uint8_t aSRC_Const_Buffer[] = "PY32F002A DMA Test Str : ABCDEF";
+const uint8_t dma_fail_str[] = "PY32F002A DMA Fail!\r\n";
+const uint8_t EndOfMonth[12]= {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 
-uint8_t aTxBuffer[UART_TX_BUF_SIZE];
-uint8_t aRxBuffer[UART_RX_BUF_SIZE];
+// uint8_t aTxBuffer[UART_TX_BUF_SIZE];
+// uint8_t aRxBuffer[UART_RX_BUF_SIZE];
 
 uint8_t *pTxBuff = NULL;
 __IO uint16_t TxSize = 0;
@@ -59,37 +61,33 @@ struct date_t
 };
 struct date_t RTC_DateStruct;
 
-const uint8_t EndOfMonth[12]= {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-
 uint32_t TimeCounter = 0;
 uint8_t aShowTime[50] = {0};
 
-
 bool g_is_rtc_alarm = false;
-const uint8_t g_rtc_alarm[] = "RTC Alarm!\r\n";
 
 /* Private function prototypes -----------------------------------------------*/
 static void APP_SystemClockConfig(void);
+static void APP_ConfigUsart(USART_TypeDef *USARTx);
+static void APP_DmaConfig(void);
+static void APP_ConfigLPTIMOneShot(void);
 static void APP_ConfigRtc(void);
 static void APP_ConfigRtcAlarm(LL_RTC_AlarmTypeDef *p_rtc_alarm_config);
 static void APP_ConfigRtcDate(uint8_t ,uint8_t , uint8_t);
 static void APP_ShowRtcCalendar(void);
 static void APP_UpadateRtcTimeStruct(void);
 static void APP_UpadateRtcDateStruct(void);
-static void APP_ConfigUsart(USART_TypeDef *USARTx);
-static void APP_DmaConfig(void);
 
 #define BUFFER_SIZE              32
 
 LL_UTILS_ClkInitTypeDef UTILS_ClkInitStruct = {LL_RCC_SYSCLK_DIV_1, LL_RCC_APB1_DIV_1};
-
-const uint8_t aSRC_Const_Buffer[] = "PY32F002A DMA Test Str : ABCDEF";
-const uint8_t dma_fail_str[] = "PY32F002A DMA Fail!\r\n";
 uint8_t aDST_Buffer[BUFFER_SIZE];
 
 volatile static bool s_dma_transfer_complete_flg = false;
 volatile static bool s_dma_transfer_error_flg = false;
 volatile static bool s_dma_transfer_fail_flg = false;
+
+volatile static bool s_is_lptim_irq = false;
 
 static void APP_DmaConfig(void)
 {
@@ -541,19 +539,55 @@ void APP_UsartIRQCallback(USART_TypeDef *USARTx)
 }
 
 /**
-  * @brief  Main program.
+ * @brief 低電力タイマLPTIMの初期化
+ * 
+ */
+static void APP_ConfigLPTIMOneShot(void)
+{
+    // LPTIMのクロック設定
+    LL_LPTIM_SetPrescaler(LPTIM1, LL_LPTIM_PRESCALER_DIV128);
+    LL_LPTIM_SetUpdateMode(LPTIM1, LL_LPTIM_UPDATE_MODE_ENDOFPERIOD);
+    LL_LPTIM_EnableIT_ARRM(LPTIM1);
+    LL_LPTIM_Enable(LPTIM1);
+    // (48MHz/128分周)/375000 = 1Hz = 1000ms
+    LL_LPTIM_SetAutoReload(LPTIM1, 375000);
+
+    // LPTIMのIRQ割り込み
+    NVIC_EnableIRQ(LPTIM1_IRQn);
+    NVIC_SetPriority(LPTIM1_IRQn, 0);
+
+    LL_LPTIM_StartCounter(LPTIM1,LL_LPTIM_OPERATING_MODE_ONESHOT);
+}
+
+/**
+ * @brief 低消費電力タイマーLPTIM割り込みハンドラ コールバック関数
+ * 
+ */
+void APP_LPTIMCallback(void)
+{
+    s_is_lptim_irq = true;
+
+    // LPTIM再起動
+    APP_ConfigLPTIMOneShot();
+}
+
+/**
+  * @brief  メイン関数
   * @param  None
   * @retval int
   */
 int main(void)
 {
-    /* Configure system clock */
+    // クロック初期化
     APP_SystemClockConfig();
 
-    // UART初期化
-    memset(aRxBuffer, 0x00, sizeof(aRxBuffer));
-    memset(aTxBuffer, 0x00, sizeof(aTxBuffer));
+    // LPTIM初期化
+    LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_LPTIM1);
+    APP_ConfigLPTIMOneShot();
 
+    // UART初期化
+    // memset(aRxBuffer, 0x00, sizeof(aRxBuffer));
+    // memset(aTxBuffer, 0x00, sizeof(aTxBuffer));
     APP_ConfigUsart(USART1);
     // LL_USART_SendAutoBaudRateReq(USART1);
     // APP_UsartReceive_IT(USART1, (uint8_t *)aRxBuffer, 1);
@@ -604,16 +638,23 @@ int main(void)
         // アプリメイン
         app_main();
 
-        // RTCアラームチェック
-        if(g_is_rtc_alarm != false) {
-            APP_UsartTransmit_IT(USART1, (uint8_t *)g_rtc_alarm, sizeof(g_rtc_alarm));
-            LL_mDelay(1);
-            g_is_rtc_alarm = false;
-        } else {
-            APP_ShowRtcCalendar();
-            APP_UsartTransmit_IT(USART1, (uint8_t *)aShowTime, sizeof(aShowTime));
+        // LPTIMチェック
+        if(s_is_lptim_irq != false) {
+            s_is_lptim_irq = false;
+            APP_UsartTransmit_IT(USART1, (uint8_t *)g_lptim_irq_str, sizeof(g_lptim_irq_str));
             LL_mDelay(1);
         }
+
+        // RTCアラームチェック
+        if(g_is_rtc_alarm != false) {
+            g_is_rtc_alarm = false;
+            APP_UsartTransmit_IT(USART1, (uint8_t *)g_rtc_alarm, sizeof(g_rtc_alarm));
+            LL_mDelay(1);
+        }
+
+        // RTCの時刻表示
+        APP_ShowRtcCalendar();
+        APP_UsartTransmit_IT(USART1, (uint8_t *)aShowTime, sizeof(aShowTime));
 
         LL_mDelay(1000);
     }

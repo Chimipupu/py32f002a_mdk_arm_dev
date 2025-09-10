@@ -23,6 +23,7 @@ extern "C" {
 
 extern void APP_TransferCompleteCallback(void);
 extern void APP_TransferErrorCallback(void);
+extern void APP_LPTIMCallback(void);
 
 /* Includes ------------------------------------------------------------------*/
 #include <stdint.h>
@@ -38,15 +39,17 @@ extern void APP_TransferErrorCallback(void);
 #include "py32f0xx_ll_pwr.h"
 #include "py32f0xx_ll_dma.h"
 #include "py32f0xx_ll_gpio.h"
+#include "py32f0xx_ll_lptim.h"
 #include "py32f0xx_ll_usart.h"
+#include "py32f0xx_ll_lptim.h"
 #include "py32f0xx_ll_rtc.h"
 
 #if defined(USE_FULL_ASSERT)
 #include "py32_assert.h"
 #endif /* USE_FULL_ASSERT */
 
-#define UART_TX_BUF_SIZE    32
-#define UART_RX_BUF_SIZE    32
+#define UART_TX_BUF_SIZE            256
+#define UART_RX_BUF_SIZE            256
 
 /* Private includes ----------------------------------------------------------*/
 /* Exported types ------------------------------------------------------------*/

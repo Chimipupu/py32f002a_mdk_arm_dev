@@ -90,40 +90,59 @@ void SysTick_Handler(void)
 {
 }
 
-/******************************************************************************/
-/* PY32F0xx Peripheral Interrupt Handlers                                     */
-/* Add here the Interrupt Handlers for the used peripherals.                  */
-/* For the available peripheral interrupt handler names,                      */
-/* please refer to the startup file.                                          */
-/******************************************************************************/
+/**
+ * @brief UART割り込みハンドラ
+ * 
+ */
 void USART1_IRQHandler(void)
 {
-  APP_UsartIRQCallback(USART1);
+    APP_UsartIRQCallback(USART1);
 }
 
+/**
+ * @brief DMA割り込みハンドラ
+ * 
+ */
 void DMA1_Channel1_IRQHandler(void)
 {
-  if(LL_DMA_IsActiveFlag_TE1(DMA1) == 1)
-  {
-    LL_DMA_ClearFlag_TE1(DMA1);
-    APP_TransferErrorCallback();
-  }
+    if(LL_DMA_IsActiveFlag_TE1(DMA1) == 1)
+    {
+        LL_DMA_ClearFlag_TE1(DMA1);
+        APP_TransferErrorCallback();
+    }
 
-  if(LL_DMA_IsActiveFlag_TC1(DMA1) == 1)
-  {
-    LL_DMA_ClearFlag_GI1(DMA1);
-    APP_TransferCompleteCallback();
-  }
+    if(LL_DMA_IsActiveFlag_TC1(DMA1) == 1)
+    {
+        LL_DMA_ClearFlag_GI1(DMA1);
+        APP_TransferCompleteCallback();
+    }
 }
 
+/**
+ * @brief 低消費電力タイマーLPTIM割り込みハンドラ
+ * 
+ */
+void LPTIM1_IRQHandler(void)
+{
+    if(LL_LPTIM_IsActiveFlag_ARRM(LPTIM) == 1)
+    {
+        LL_LPTIM_ClearFLAG_ARRM(LPTIM);
+
+        APP_LPTIMCallback();
+    }
+}
+
+/**
+ * @brief RTC割り込みハンドラ
+ * 
+ */
 void RTC_IRQHandler(void)
 {
-  if ((LL_RTC_IsActiveFlag_ALR(RTC) != 0)&& (LL_RTC_IsEnabledIT_ALR(RTC) != 0))
-  {
-    g_is_rtc_alarm = true;
+    if ((LL_RTC_IsActiveFlag_ALR(RTC) != 0)&& (LL_RTC_IsEnabledIT_ALR(RTC) != 0))
+    {
+        g_is_rtc_alarm = true;
 
-    /* Clear alarm flag */
-    LL_RTC_ClearFlag_ALR(RTC);
-  }
+        LL_RTC_ClearFlag_ALR(RTC);
+    }
 }
 /************************ (C) COPYRIGHT Puya *****END OF FILE****/
