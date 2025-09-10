@@ -6,13 +6,6 @@
  * @date 2025-08-23
  *
  * @copyright Copyright (c) 2025 Chimipupu All Rights Reserved.
- *
- * [免責]
- * 誰かがこの実装を使って何かあってもいかなる責任は負えません！
- * もしそれでも良いなら、「I_AGREE_TO_YOUR_DISCLAIMER」をdefineで定義して。
- * そうすると、PY32F002AF15P6のシリコンはPY32F030K16T6と同じだから
- * ROMは32KB, RAMは4KBになるし、HSIはPLLで48MHzに逓倍できる！PY32F030の色んな機能が使える！
- * Enjoy! Your 15円ARMマイコンPY32F002A Life by Chimipupu
  */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
@@ -26,10 +19,6 @@
 #include "app_main.h"
 
 /* Private define ------------------------------------------------------------*/
-#if defined(I_AGREE_TO_YOUR_DISCLAIMER)
-#warning I agree to the disclaimer, run PY32F002A as PY32F030, and multiply HSI to 48 MHz with PLL!
-#endif
-
 #define UART_TX_BUF_SIZE    32
 #define UART_RX_BUF_SIZE    32
 
@@ -53,8 +42,6 @@ extern uint32_t SystemCoreClock;
 /* Private function prototypes -----------------------------------------------*/
 static void APP_SystemClockConfig(void);
 static void APP_ConfigUsart(USART_TypeDef *USARTx);
-
-#if defined(I_AGREE_TO_YOUR_DISCLAIMER)
 
 #define BUFFER_SIZE              32
 
@@ -131,7 +118,6 @@ void APP_TransferErrorCallback(void)
 {
     s_dma_transfer_error_flg = true;
 }
-#endif
 
 /**
   * @brief  Main program.
@@ -151,7 +137,6 @@ int main(void)
     // LL_USART_SendAutoBaudRateReq(USART1);
     // APP_UsartReceive_IT(USART1, (uint8_t *)aRxBuffer, 1);
 
-#if defined(I_AGREE_TO_YOUR_DISCLAIMER)
     // DMA初期化
     memset(aDST_Buffer, 0x00, sizeof(aDST_Buffer));
     APP_DmaConfig();
@@ -167,7 +152,6 @@ int main(void)
             LL_mDelay(100);
         }
     }
-#endif // I_AGREE_TO_YOUR_DISCLAIMER
 
     // アプリ初期化
     app_main_init();
@@ -175,7 +159,7 @@ int main(void)
     while (1)
     {
         APP_UsartTransmit_IT(USART1, (uint8_t *)uart_test_str_buf, sizeof(uart_test_str_buf));
-        LL_mDelay(100);
+        LL_mDelay(1);
 
         // アプリメイン
         app_main();
@@ -216,19 +200,13 @@ static void APP_SystemClockConfig(void)
         NOP();
     }
 
-#if defined(I_AGREE_TO_YOUR_DISCLAIMER)
     // [HSI@24MHzをPLLで48MHzに逓倍]
     LL_PLL_ConfigSystemClock_HSI(&UTILS_ClkInitStruct);
-
     LL_Init1msTick(HSI_FREQ);
-
     LL_SetSystemCoreClock(HSI_FREQ);
-#else
-    /* Set AHB prescaler*/
     LL_RCC_SetAHBPrescaler(LL_RCC_SYSCLK_DIV_1);
-
-    /*Configure HSISYS as system clock source */
     LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_HSISYS);
+
     while(LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_HSISYS)
     {
         NOP();
@@ -240,7 +218,6 @@ static void APP_SystemClockConfig(void)
 
     /* Update system clock global variable SystemCoreClock (can also be updated by calling SystemCoreClockUpdate function) */
     LL_SetSystemCoreClock(HSI_FREQ);
-#endif
 }
 
 /**

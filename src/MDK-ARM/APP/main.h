@@ -19,17 +19,10 @@ extern "C" {
 
 // #define HSI_FREQ             8000000
 // #define HSI_FREQ            24000000
-
-#if defined(I_AGREE_TO_YOUR_DISCLAIMER)
-#include "py32f0xx_ll_dma.h"
 #define HSI_FREQ            48000000
+
 extern void APP_TransferCompleteCallback(void);
 extern void APP_TransferErrorCallback(void);
-#endif
-
-#if !defined(I_AGREE_TO_YOUR_DISCLAIMER) && (HSI_FREQ == 48000000)
-#error I agree to the disclaimer, run PY32F002A as PY32F030, and multiply HSI to 48 MHz with PLL!
-#endif
 
 /* Includes ------------------------------------------------------------------*/
 #include "py32f0xx_ll_rcc.h"
@@ -39,6 +32,7 @@ extern void APP_TransferErrorCallback(void);
 #include "py32f0xx_ll_cortex.h"
 #include "py32f0xx_ll_utils.h"
 #include "py32f0xx_ll_pwr.h"
+#include "py32f0xx_ll_dma.h"
 #include "py32f0xx_ll_gpio.h"
 #include "py32f0xx_ll_usart.h"
 
