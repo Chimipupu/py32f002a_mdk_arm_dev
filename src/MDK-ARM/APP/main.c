@@ -19,6 +19,7 @@
 #include "app_main.h"
 
 /* Private define ------------------------------------------------------------*/
+#define LPTIM_CLOCK_SRC_LSI
 #define RTC_ASYNCH_PREDIV          ((uint32_t)0x7FFF)
 
 /* Private variables ---------------------------------------------------------*/
@@ -70,6 +71,7 @@ bool g_is_rtc_alarm = false;
 static void APP_SystemClockConfig(void);
 static void APP_ConfigUsart(USART_TypeDef *USARTx);
 static void APP_DmaConfig(void);
+static void APP_LPTIMClockconf(void);
 static void APP_ConfigLPTIMOneShot(void);
 static void APP_ConfigRtc(void);
 static void APP_ConfigRtcAlarm(LL_RTC_AlarmTypeDef *p_rtc_alarm_config);
@@ -201,6 +203,13 @@ static void APP_SystemClockConfig(void)
 
     /* Update system clock global variable SystemCoreClock (can also be updated by calling SystemCoreClockUpdate function) */
     LL_SetSystemCoreClock(HSI_FREQ);
+
+    // 内蔵RCレゾネータのLSI(32.768KHz)を有効
+    LL_RCC_LSI_Enable();
+    while(LL_RCC_LSI_IsReady() == 0)
+    {
+        NOP();
+    }
 }
 
 /**
@@ -539,18 +548,40 @@ void APP_UsartIRQCallback(USART_TypeDef *USARTx)
 }
 
 /**
+ * @brief 低消費電力タイマーLPTIMのクロック設定関数
+ * 
+ */
+static void APP_LPTIMClockconf(void)
+{
+#ifdef LPTIM_CLOCK_SRC_LSI
+    // 低消費電力タイマーLPTIMのクロック源を内蔵RCレゾネータのLSI(32.768KHz)に設定
+    LL_RCC_SetLPTIMClockSource(LL_RCC_LPTIM1_CLKSOURCE_LSI);
+#endif
+}
+
+/**
  * @brief 低電力タイマLPTIMの初期化
  * 
  */
 static void APP_ConfigLPTIMOneShot(void)
 {
-    // LPTIMのクロック設定
+#ifdef LPTIM_CLOCK_SRC_LSI
+    LL_LPTIM_SetPrescaler(LPTIM1, LL_LPTIM_PRESCALER_DIV1);
+#else
     LL_LPTIM_SetPrescaler(LPTIM1, LL_LPTIM_PRESCALER_DIV128);
+#endif // LPTIM_CLOCK_SRC_LSI
+
     LL_LPTIM_SetUpdateMode(LPTIM1, LL_LPTIM_UPDATE_MODE_ENDOFPERIOD);
     LL_LPTIM_EnableIT_ARRM(LPTIM1);
     LL_LPTIM_Enable(LPTIM1);
+
+#ifdef LPTIM_CLOCK_SRC_LSI
+    // (KSI32.768KHz/1分周)/32768 = 1Hz = 1000ms
+    LL_LPTIM_SetAutoReload(LPTIM1, 51);
+#else
     // (48MHz/128分周)/375000 = 1Hz = 1000ms
     LL_LPTIM_SetAutoReload(LPTIM1, 375000);
+#endif // LPTIM_CLOCK_SRC_LSI
 
     // LPTIMのIRQ割り込み
     NVIC_EnableIRQ(LPTIM1_IRQn);
@@ -580,9 +611,11 @@ int main(void)
 {
     // クロック初期化
     APP_SystemClockConfig();
+    LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_PWR);
+    LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_LPTIM1);
 
     // LPTIM初期化
-    LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_LPTIM1);
+    APP_LPTIMClockconf();
     APP_ConfigLPTIMOneShot();
 
     // UART初期化

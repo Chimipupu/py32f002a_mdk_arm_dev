@@ -12,9 +12,10 @@
 > ⚠️この実装では、PY32F002Aに未搭載のはずの機能の多くが実行、動作している(※)⚠️<br>
 > ※[PY32F002AF15P6](https://www.py32.org/en/mcu/PY32F002Axx.html)🔗はシリコンがROM32KB,RAM4KBの[PY32F030](https://www.py32.org/en/mcu/PY32F030xx.html#introduction)🔗の可能性がある<br>
 > ※PY32F002Aには未搭載のはずの下記機能の実行と動作を確認<br>
-> ➡️ PLLでクロックを48MHzにできる<br>
-> ➡️ DMAも動く<br>
-> ➡️ RTCも動く<br>
+> ➡️ **未搭載のはずのPLLが存在していて、PLLでクロックを48MHzに逓倍できる**<br>
+> ➡️ **未搭載のはずの内蔵RCレゾネータのLSI(32.768KHz)が存在していて、LSIをクロック源に使える**<br>
+> ➡️ **未搭載のはずのDMAが存在していて、DMAの転送もIRQ割り込みもできる**<br>
+> ➡️ **未搭載のはずのRTCが存在していて、RTCで1秒おきのカウントとIRQ割り込みもできる**<br>
 
 | 項目 | PUYA公表スペック<br>[PY32F002AF15P6](https://www.py32.org/en/mcu/PY32F002Axx.html)🔗 | 実際のスペック<br>(a.k.a [PY32F030](https://www.py32.org/en/mcu/PY32F030xx.html#introduction)🔗) |
 | ---- | ---- | ---- |
