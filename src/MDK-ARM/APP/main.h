@@ -26,6 +26,7 @@ extern void APP_TransferErrorCallback(void);
 extern void APP_LPTIMCallback(void);
 
 /* Includes ------------------------------------------------------------------*/
+#include <stdio.h>
 #include <stdint.h>
 #include <string.h>
 #include <stdbool.h>

@@ -23,7 +23,6 @@
 #define RTC_ASYNCH_PREDIV          ((uint32_t)0x7FFF)
 
 /* Private variables ---------------------------------------------------------*/
-const uint8_t uart_test_str_buf[] = "PY32F002A Dev By Chimipupu\r\n";
 const uint8_t g_lptim_irq_str[] = "LPTIM IRQ!\r\n";
 const uint8_t g_rtc_alarm[] = "RTC Alarm!\r\n";
 const uint8_t aSRC_Const_Buffer[] = "PY32F002A DMA Test Str : ABCDEF";
@@ -90,6 +89,24 @@ volatile static bool s_dma_transfer_error_flg = false;
 volatile static bool s_dma_transfer_fail_flg = false;
 
 volatile static bool s_is_lptim_irq = false;
+
+// printf()用
+int __io_putchar(int ch)
+{
+    APP_UsartTransmit_IT(USART1, (uint8_t *)&ch, 1);
+    return ch;
+}
+int _write(int file, char *ptr, int len)
+{
+    for (int i = 0; i < len; i++) {
+        __io_putchar(ptr[i]);
+    }
+    return len;
+}
+int fputc(int ch, FILE *f)
+{
+    return __io_putchar(ch);
+}
 
 static void APP_DmaConfig(void)
 {
@@ -451,12 +468,20 @@ static void APP_ConfigUsart(USART_TypeDef *USARTx)
   */
 void APP_UsartTransmit_IT(USART_TypeDef *USARTx, uint8_t *pData, uint16_t Size)
 {
+    volatile uint8_t i;
+
     pTxBuff = pData;
     TxSize = Size;
     TxCount = Size;
 
-    /*Enable transmit data register empty interrupt*/
     LL_USART_EnableIT_TXE(USARTx);
+
+    // [バッファの衝突回避の待ち処理]
+    // ※48MHz = 20.83ns, 待ち時間 = 20.83ns * 96 ≒ 2us
+    for(i = 0; i < 96; i++)
+    {
+        NOP();
+    }
 }
 
 /**
@@ -512,19 +537,19 @@ void APP_UsartIRQCallback(USART_TypeDef *USARTx)
     /*Receive error occurred*/
     if (errorflags != RESET)
     {
-    /* Used for auto baud rate detection */
-    if ((LL_USART_IsActiveFlag_RXNE(USARTx) != RESET) && (LL_USART_IsEnabledIT_RXNE(USARTx) != RESET))
-    {
-        *RxBuff = LL_USART_ReceiveData8(USARTx);
-        RxBuff++;
-        if (--RxCount == 0U)
+        /* Used for auto baud rate detection */
+        if ((LL_USART_IsActiveFlag_RXNE(USARTx) != RESET) && (LL_USART_IsEnabledIT_RXNE(USARTx) != RESET))
         {
-            LL_USART_DisableIT_RXNE(USARTx);
-            LL_USART_DisableIT_PE(USARTx);
-            LL_USART_DisableIT_ERROR(USARTx);
+            *RxBuff = LL_USART_ReceiveData8(USARTx);
+            RxBuff++;
+            if (--RxCount == 0U)
+            {
+                LL_USART_DisableIT_RXNE(USARTx);
+                LL_USART_DisableIT_PE(USARTx);
+                LL_USART_DisableIT_ERROR(USARTx);
+            }
+            return;
         }
-        return;
-    }
     }
     /*Transmit data register empty*/
     if ((LL_USART_IsActiveFlag_TXE(USARTx) != RESET) && (LL_USART_IsEnabledIT_TXE(USARTx) != RESET))
@@ -609,6 +634,9 @@ void APP_LPTIMCallback(void)
   */
 int main(void)
 {
+    // 標準ライブラリ関連初期化
+    setbuf(stdout, NULL);
+
     // クロック初期化
     APP_SystemClockConfig();
     LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_PWR);
@@ -665,8 +693,7 @@ int main(void)
 
     while (1)
     {
-        APP_UsartTransmit_IT(USART1, (uint8_t *)uart_test_str_buf, sizeof(uart_test_str_buf));
-        LL_mDelay(1);
+        printf("PY32F002A printf() porting By Chimipupu\r\n");
 
         // アプリメイン
         app_main();
@@ -674,20 +701,18 @@ int main(void)
         // LPTIMチェック
         if(s_is_lptim_irq != false) {
             s_is_lptim_irq = false;
-            APP_UsartTransmit_IT(USART1, (uint8_t *)g_lptim_irq_str, sizeof(g_lptim_irq_str));
-            LL_mDelay(1);
+            printf("LPTIM IRQ!\r\n");
         }
 
         // RTCアラームチェック
         if(g_is_rtc_alarm != false) {
             g_is_rtc_alarm = false;
-            APP_UsartTransmit_IT(USART1, (uint8_t *)g_rtc_alarm, sizeof(g_rtc_alarm));
-            LL_mDelay(1);
+            printf("RTC Alarm!\r\n");
         }
 
         // RTCの時刻表示
         APP_ShowRtcCalendar();
-        APP_UsartTransmit_IT(USART1, (uint8_t *)aShowTime, sizeof(aShowTime));
+        printf("%s\r\n", aShowTime);
 
         LL_mDelay(1000);
     }

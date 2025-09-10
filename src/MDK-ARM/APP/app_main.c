@@ -56,9 +56,6 @@ void app_main_init(void)
  */
 void app_main(void)
 {
-    volatile int len;
-
-    len = sprintf((char *)&s_tx_data_buf[0], "pi = %f\r\n", s_math_pi);
-    APP_UsartTransmit_IT(USART1, s_tx_data_buf, len);
-    LL_mDelay(1);
+    sprintf((char *)&s_tx_data_buf[0], "pi = %f\r\n", s_math_pi);
+    printf("%s\r\n", s_tx_data_buf);
 }
