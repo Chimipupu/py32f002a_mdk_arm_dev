@@ -3,7 +3,7 @@
 1石12円の世界最安級?なARMマイコン PY32F002Aの評価F/W個人開発リポジトリ
 
 <div align="center">
-  <img src="/doc/py32f002a_bread_board.png">
+  <img src="/doc/py32f002a_bread_board.png" hight = 200>
 </div>
 
 ## 逆スペック詐欺
@@ -13,7 +13,7 @@
 > ※[PY32F002AF15P6](https://www.py32.org/en/mcu/PY32F002Axx.html)🔗はシリコンがROM32KB,RAM4KBの[PY32F030](https://www.py32.org/en/mcu/PY32F030xx.html#introduction)🔗の可能性がある<br>
 > ➡️ **Flashは16KBのはずが32KBも使用できる**<br>
 > ➡️ **SRAMは3KBのはずが4KBも使用できる**<br>
-> ➡️ **未搭載のはずのPLLが存在していて、PLLでクロックを48MHzに逓倍できる**<br>
+> ➡️ **未搭載のはずのPLLが存在していて、PLLはx2の2逓倍固定だがHSI 24MHzを48MHzにできる**<br>
 > ➡️ **未搭載のはずの内蔵RCレゾネータのLSI(32.768KHz)が存在していて、LSIをクロック源に使える**<br>
 > ➡️ **未搭載のはずのDMAが存在していて、DMAの転送もIRQ割り込みもできる**<br>
 > ➡️ **未搭載のはずのRTCが存在していて、RTCで1秒おきのカウントとIRQ割り込みもできる**<br>
@@ -23,7 +23,7 @@
 | CPU | ARM Cortex-M0+ | ARM Cortex-M0+ |
 | ROM | 20KB | **32KB** |
 | RAM | 3KB | **4KB** |
-| Clock | 24MHz(PLLなし) | **48MHz<br>PLLで逓倍できる<br>内蔵RCレゾネータのLSI(32.768KHz)** |
+| Clock | 24MHz(PLLなし) | **48MHz<br>PLLはx2の2逓倍固定<br>内蔵RCレゾネータのLSI(32.768KHz)** |
 | GPIO | x18本 | x18本 |
 | DMA | なし | **x3本** |
 | タイマー | 16bit高機能タイマー TIM1<br> 16bit汎用タイマー TIM3<br>低電力タイマー LPTIM | 16bit高機能タイマー TIM1<br> 16bit汎用タイマー TIM3,**TIM14,TIM16,TIM17**<br>低電力タイマー LPTIM |

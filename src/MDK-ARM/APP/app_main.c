@@ -56,6 +56,6 @@ void app_main_init(void)
  */
 void app_main(void)
 {
-    sprintf((char *)&s_tx_data_buf[0], "pi = %f\r\n", s_math_pi);
+    sprintf((char *)&s_tx_data_buf[0], "pi = %f", s_math_pi);
     printf("%s\r\n", s_tx_data_buf);
 }

@@ -90,6 +90,9 @@ volatile static bool s_dma_transfer_fail_flg = false;
 
 volatile static bool s_is_lptim_irq = false;
 
+volatile static uint8_t s_hsi_freq = 0;
+volatile static uint8_t s_pll_freq = 0;
+
 // printf()用
 int __io_putchar(int ch)
 {
@@ -177,9 +180,10 @@ void APP_TransferErrorCallback(void)
   */
 static void APP_SystemClockConfig(void)
 {
-    uint32_t fact_hsi_trim_val;
+    volatile ErrorStatus pll_init_status;
 
 #if 0
+    uint32_t fact_hsi_trim_val;
     uint32_t reg;
 
     // [工場出荷時のHSIのトリム値を読み出し]
@@ -193,7 +197,7 @@ static void APP_SystemClockConfig(void)
     LL_RCC_HSI_Enable();
 
 #if (HSI_FREQ == 24000000) || (HSI_FREQ == 48000000)
-    // [内部RCクロックのHSIを8MHzら24MHzに変更]
+    // [内部RCクロックのHSIを8MHzから24MHzに変更]
     LL_RCC_HSI_SetCalibFreq(LL_RCC_HSICALIBRATION_24MHz);
 #endif
 
@@ -203,7 +207,8 @@ static void APP_SystemClockConfig(void)
     }
 
     // [HSI@24MHzをPLLで48MHzに逓倍]
-    LL_PLL_ConfigSystemClock_HSI(&UTILS_ClkInitStruct);
+    // ※PLLはx2の2逓倍固定
+    pll_init_status = LL_PLL_ConfigSystemClock_HSI(&UTILS_ClkInitStruct);
     LL_Init1msTick(HSI_FREQ);
     LL_SetSystemCoreClock(HSI_FREQ);
     LL_RCC_SetAHBPrescaler(LL_RCC_SYSCLK_DIV_1);
@@ -641,6 +646,8 @@ int main(void)
     APP_SystemClockConfig();
     LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_PWR);
     LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_LPTIM1);
+    s_hsi_freq = LL_RCC_HSI_GetFreq() / 1000000;
+    s_pll_freq = s_hsi_freq * 2;
 
     // LPTIM初期化
     APP_LPTIMClockconf();
@@ -693,7 +700,8 @@ int main(void)
 
     while (1)
     {
-        printf("PY32F002A printf() porting By Chimipupu\r\n");
+        printf("PY32F002A Develop By Chimipupu\r\n");
+        printf("HSI = %d MHz, PLL Freq = %d MHz\r\n", s_hsi_freq, s_pll_freq);
 
         // アプリメイン
         app_main();
@@ -714,7 +722,7 @@ int main(void)
         APP_ShowRtcCalendar();
         printf("%s\r\n", aShowTime);
 
-        LL_mDelay(1000);
+        LL_mDelay(500);
     }
 }
 
