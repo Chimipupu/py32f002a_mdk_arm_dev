@@ -1,6 +1,6 @@
-# 世界最安級 15円 ARMマイコン PY32F002A 評価F/W開発
+# 1石12円 ARMマイコン PY32F002A 評価F/W開発
 
-1石15円の世界最安級?なARMマイコン PY32F002Aの評価F/W個人開発リポジトリ
+1石12円の世界最安級?なARMマイコン PY32F002Aの評価F/W個人開発リポジトリ
 
 <div align="center">
   <img src="/doc/py32f002a_bread_board.png">
@@ -9,7 +9,7 @@
 ## 逆スペック詐欺
 
 > [!CAUTION]
-> [PY32F002AF15P6](https://www.py32.org/en/mcu/PY32F002Axx.html)🔗はシリコンがROM32KB,RAM4KBの[PY32F030](https://www.py32.org/en/mcu/PY32F030xx.html#introduction)🔗ということが確定(※)<br>※PY32F002Aでは存在しないはずのPLLでクロックを48MHzにできた<br>※PY32F002Aでは存在しないはずのDMAも動いた<br><br>[個人的な推測]<br>PY32F030でスペックが満たないものか不具合のあるシリコンをPY32F002Aとして売ってる可能性はありそう。<br>もしそうなら日本円で15円っていうありえん値段でARMのマイコンが買えるのも腑に落ちる。
+> ⚠️この実装では、PY32F002Aに搭載されていないはずの機能の多くを実行しています(※)⚠️ <br>※[PY32F002AF15P6](https://www.py32.org/en/mcu/PY32F002Axx.html)🔗はシリコンがROM32KB,RAM4KBの[PY32F030](https://www.py32.org/en/mcu/PY32F030xx.html#introduction)🔗ということがほぼ確定(※)<br>※PY32F002AにはないはずのPLLでクロックを48MHzにできる<br>※PY32F002AにはないはずのDMAも動く<br>
 
 | 項目 | PUYA公表スペック<br>[PY32F002AF15P6](https://www.py32.org/en/mcu/PY32F002Axx.html)🔗 | 実際のスペック<br>(a.k.a [PY32F030](https://www.py32.org/en/mcu/PY32F030xx.html#introduction)🔗) |
 | ---- | ---- | ---- |
@@ -43,7 +43,8 @@
 - コンパイラ
   - ArmClang V6.24
 - 最適化
-  - -O0 or -Os
+  - デバッグ中 ... `-O0` (最適化なし)
+  - 最適化あり ... `-Oz` (サイズ優先の最適化)
 
 <div align="center">
   <img width="500 " src="/doc/uvison5_py32f002a_yool_version.png">

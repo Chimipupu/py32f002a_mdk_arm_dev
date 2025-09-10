@@ -36,6 +36,7 @@ float app_math_pi_calc(uint32_t cnt)
     }
 
     float pi = pow(a + b, 2) / (4.0 * t);
+
     return pi;
 }
 
@@ -57,7 +58,7 @@ void app_main(void)
 {
     volatile int len;
 
-    s_math_pi = app_math_pi_calc(3);
-    len = sprintf((char *)&s_tx_data_buf[0], "pi=%.8f\r\n", s_math_pi);
+    s_math_pi = app_math_pi_calc(4);
+    len = sprintf((char *)&s_tx_data_buf[0], "pi=%f\r\n", s_math_pi);
     APP_UsartTransmit_IT(USART1, s_tx_data_buf, len);
 }

@@ -72,7 +72,7 @@ volatile static bool s_dma_transfer_fail_flg = false;
 
 static void APP_DmaConfig(void)
 {
-    // PY32F002AF15P6のシリコンはPY32F030K16T6なので、
+    // PY32F002AF15P6のシリコンはPY32F030のROM32KB,SRAM4KBなので、
     // ないはずのDMAがCH1~CH3の3本使える
 
     LL_DMA_InitTypeDef dma_initstruct = {0};
@@ -157,7 +157,7 @@ int main(void)
     APP_DmaConfig();
 
     // DMA転送完了待ち
-    LL_mDelay(1);
+    // LL_mDelay(1);
 
     // DMA転送エラー確認
     if((s_dma_transfer_error_flg != false) || (s_dma_transfer_fail_flg != false)) {
@@ -167,7 +167,7 @@ int main(void)
             LL_mDelay(100);
         }
     }
-#endif
+#endif // I_AGREE_TO_YOUR_DISCLAIMER
 
     // アプリ初期化
     app_main_init();
@@ -175,6 +175,7 @@ int main(void)
     while (1)
     {
         APP_UsartTransmit_IT(USART1, (uint8_t *)uart_test_str_buf, sizeof(uart_test_str_buf));
+        LL_mDelay(100);
 
         // アプリメイン
         app_main();
