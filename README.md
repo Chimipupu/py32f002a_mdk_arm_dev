@@ -9,9 +9,10 @@
 ## 逆スペック詐欺
 
 > [!CAUTION]
-> ⚠️この実装では、PY32F002Aに未搭載のはずの機能の多くが実行、動作している(※)⚠️<br>
+> ⚠️このF/Wは、PY32F002Aには未搭載のはずの機能の多くが動作している(※)⚠️<br>
 > ※[PY32F002AF15P6](https://www.py32.org/en/mcu/PY32F002Axx.html)🔗はシリコンがROM32KB,RAM4KBの[PY32F030](https://www.py32.org/en/mcu/PY32F030xx.html#introduction)🔗の可能性がある<br>
-> ※PY32F002Aには未搭載のはずの下記機能の実行と動作を確認<br>
+> ➡️ **Flashは16KBのはずが32KBも使用できる**<br>
+> ➡️ **SRAMは3KBのはずが4KBも使用できる**<br>
 > ➡️ **未搭載のはずのPLLが存在していて、PLLでクロックを48MHzに逓倍できる**<br>
 > ➡️ **未搭載のはずの内蔵RCレゾネータのLSI(32.768KHz)が存在していて、LSIをクロック源に使える**<br>
 > ➡️ **未搭載のはずのDMAが存在していて、DMAの転送もIRQ割り込みもできる**<br>
@@ -22,7 +23,7 @@
 | CPU | ARM Cortex-M0+ | ARM Cortex-M0+ |
 | ROM | 20KB | **32KB** |
 | RAM | 3KB | **4KB** |
-| Clock | 24MHz(PLLなし) | **48MHz(PLLで逓倍)** |
+| Clock | 24MHz(PLLなし) | **48MHz<br>PLLで逓倍できる<br>内蔵RCレゾネータのLSI(32.768KHz)** |
 | GPIO | x18本 | x18本 |
 | DMA | なし | **x3本** |
 | タイマー | 16bit高機能タイマー TIM1<br> 16bit汎用タイマー TIM3<br>低電力タイマー LPTIM | 16bit高機能タイマー TIM1<br> 16bit汎用タイマー TIM3,**TIM14,TIM16,TIM17**<br>低電力タイマー LPTIM |

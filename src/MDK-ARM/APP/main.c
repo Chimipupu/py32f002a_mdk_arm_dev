@@ -28,7 +28,7 @@ const uint8_t g_lptim_irq_str[] = "LPTIM IRQ!\r\n";
 const uint8_t g_rtc_alarm[] = "RTC Alarm!\r\n";
 const uint8_t aSRC_Const_Buffer[] = "PY32F002A DMA Test Str : ABCDEF";
 const uint8_t dma_fail_str[] = "PY32F002A DMA Fail!\r\n";
-const uint8_t EndOfMonth[12]= {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+const uint8_t EndOfMonth[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 
 // uint8_t aTxBuffer[UART_TX_BUF_SIZE];
 // uint8_t aRxBuffer[UART_RX_BUF_SIZE];
