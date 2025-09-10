@@ -22,13 +22,15 @@
 #define UART_TX_BUF_SIZE    32
 #define UART_RX_BUF_SIZE    32
 
+#define RTC_ASYNCH_PREDIV          ((uint32_t)0x7FFF)
+
 /* Private variables ---------------------------------------------------------*/
 const uint8_t uart_test_str_buf[] = "PY32F002A Dev By Chimipupu\r\n";
 
 uint8_t aTxBuffer[UART_TX_BUF_SIZE];
 uint8_t aRxBuffer[UART_RX_BUF_SIZE];
 
-uint8_t *TxBuff = NULL;
+uint8_t *pTxBuff = NULL;
 __IO uint16_t TxSize = 0;
 __IO uint16_t TxCount = 0;
 
@@ -39,15 +41,47 @@ __IO uint16_t RxCount = 0;
 __IO ITStatus UartReady = RESET;
 
 extern uint32_t SystemCoreClock;
+
+struct time_t
+{
+    uint8_t sec;
+    uint8_t min;
+    uint8_t hour;
+};
+struct time_t RTC_TimeStruct;
+struct time_t RTC_AlarmStruct;
+
+struct date_t
+{
+    uint8_t month;
+    uint8_t day;
+    uint8_t year;
+};
+struct date_t RTC_DateStruct;
+
+const uint8_t EndOfMonth[12]= {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+
+uint32_t TimeCounter = 0;
+uint8_t aShowTime[50] = {0};
+
+
+bool g_is_rtc_alarm = false;
+const uint8_t g_rtc_alarm[] = "RTC Alarm!\r\n";
+
 /* Private function prototypes -----------------------------------------------*/
 static void APP_SystemClockConfig(void);
+static void APP_ConfigRtc(void);
+static void APP_ConfigRtcAlarm(LL_RTC_AlarmTypeDef *p_rtc_alarm_config);
+static void APP_ConfigRtcDate(uint8_t ,uint8_t , uint8_t);
+static void APP_ShowRtcCalendar(void);
+static void APP_UpadateRtcTimeStruct(void);
+static void APP_UpadateRtcDateStruct(void);
 static void APP_ConfigUsart(USART_TypeDef *USARTx);
+static void APP_DmaConfig(void);
 
 #define BUFFER_SIZE              32
 
 LL_UTILS_ClkInitTypeDef UTILS_ClkInitStruct = {LL_RCC_SYSCLK_DIV_1, LL_RCC_APB1_DIV_1};
-
-static void APP_DmaConfig(void);
 
 const uint8_t aSRC_Const_Buffer[] = "PY32F002A DMA Test Str : ABCDEF";
 const uint8_t dma_fail_str[] = "PY32F002A DMA Fail!\r\n";
@@ -120,55 +154,6 @@ void APP_TransferErrorCallback(void)
 }
 
 /**
-  * @brief  Main program.
-  * @param  None
-  * @retval int
-  */
-int main(void)
-{
-    /* Configure system clock */
-    APP_SystemClockConfig();
-
-    // UART初期化
-    memset(aRxBuffer, 0x00, sizeof(aRxBuffer));
-    memset(aTxBuffer, 0x00, sizeof(aTxBuffer));
-
-    APP_ConfigUsart(USART1);
-    // LL_USART_SendAutoBaudRateReq(USART1);
-    // APP_UsartReceive_IT(USART1, (uint8_t *)aRxBuffer, 1);
-
-    // DMA初期化
-    memset(aDST_Buffer, 0x00, sizeof(aDST_Buffer));
-    APP_DmaConfig();
-
-    // DMA転送完了待ち
-    // LL_mDelay(1);
-
-    // DMA転送エラー確認
-    if((s_dma_transfer_error_flg != false) || (s_dma_transfer_fail_flg != false)) {
-        while (1)
-        {
-            APP_UsartTransmit_IT(USART1, (uint8_t *)dma_fail_str, sizeof(dma_fail_str));
-            LL_mDelay(100);
-        }
-    }
-
-    // アプリ初期化
-    app_main_init();
-
-    while (1)
-    {
-        APP_UsartTransmit_IT(USART1, (uint8_t *)uart_test_str_buf, sizeof(uart_test_str_buf));
-        LL_mDelay(1);
-
-        // アプリメイン
-        app_main();
-
-        LL_mDelay(1000);
-    }
-}
-
-/**
   * @brief  System clock configuration
   * @param  None
   * @retval None
@@ -218,6 +203,167 @@ static void APP_SystemClockConfig(void)
 
     /* Update system clock global variable SystemCoreClock (can also be updated by calling SystemCoreClockUpdate function) */
     LL_SetSystemCoreClock(HSI_FREQ);
+}
+
+/**
+  * @brief  Configure RTC clock
+  * @param  None
+  * @retval None
+  */
+static void APP_ConfigRtc(void)
+{
+    LL_RTC_InitTypeDef rtc_initstruct = {0};
+
+    /*##-1- Enable PWR clock and enable access to the backup domain #######*/
+    /* To change the source clock of the RTC functionalities (LSE, LSI), you have to:
+        - Enable the PWR clock
+        - Enable write access to configure the RTC clock source (once after reset).
+        - Reset the Backup domain
+        - Configure the needed RTC clock source */
+    LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_PWR);
+
+    LL_PWR_EnableBkUpAccess();
+
+    /*##-2- Configure LSI as RTC clock source##############################*/
+    /* Enable LSI */
+    LL_RCC_LSI_Enable();
+    while (LL_RCC_LSI_IsReady() != 1)
+    {
+    }
+    /* Reset backup domain only if LSI has not been selected as RTC clock source */
+    if (LL_RCC_GetRTCClockSource() != LL_RCC_RTC_CLKSOURCE_LSI)
+    {
+        LL_RCC_ForceBackupDomainReset();
+        LL_RCC_ReleaseBackupDomainReset();
+        LL_RCC_SetRTCClockSource(LL_RCC_RTC_CLKSOURCE_LSI);
+    }
+
+    /* Enable RTC clock and RTC APB clock */
+    LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_RTC);
+    LL_RCC_EnableRTC();
+
+    /*##-4 Configure RTC ######################################### ############*/
+    /* Configure RTC prescaler and RTC data registers */
+    if (LL_RTC_DeInit(RTC) != SUCCESS) 
+    {
+        /* Error prompt */
+        // BSP_LED_Toggle(LED_GREEN);
+    }
+
+    /* Configure prescaler and output source */
+    rtc_initstruct.AsynchPrescaler = RTC_ASYNCH_PREDIV;
+    rtc_initstruct.OutPutSource    = LL_RTC_CALIB_OUTPUT_NONE;
+    if (LL_RTC_Init(RTC, &rtc_initstruct) != SUCCESS)
+    {
+        /* Error prompt */
+        // BSP_LED_Toggle(LED_GREEN);
+    }
+}
+
+/**
+ * @brief RTCアラーム設定関数
+ * 
+ * @param p_rtc_alarm_config RTCアラーム構造体ポインタ
+ */
+static void APP_ConfigRtcAlarm(LL_RTC_AlarmTypeDef *p_rtc_alarm_config)
+{
+    if (LL_RTC_ALARM_Init(RTC, LL_RTC_FORMAT_BIN, p_rtc_alarm_config) != SUCCESS)   
+    {
+        /* Error prompt */
+        // BSP_LED_Toggle(LED_GREEN);
+    }
+
+    /* Disable write protection of RTC registers */
+    LL_RTC_DisableWriteProtection(RTC);
+
+    /* Clear alarm interrupt flag */
+    LL_RTC_ClearFlag_ALR(RTC);
+
+    /* Enable alarm interrupt */
+    LL_RTC_EnableIT_ALR(RTC);
+
+    /* Enable write protection of RTC registers */
+    LL_RTC_EnableWriteProtection(RTC);
+
+    /*##-6- Configure RTC NVIC ###############################*/
+    NVIC_SetPriority(RTC_IRQn, 0x00);
+    NVIC_EnableIRQ(RTC_IRQn);
+
+    /*##-7- Exit Initialization Mode #######################################*/
+    if (LL_RTC_ExitInitMode(RTC) != SUCCESS)
+    {
+        /* Error prompt */
+        // BSP_LED_Toggle(LED_GREEN);
+    }
+}
+
+/**
+  * @brief  Configure Date
+  * @param  fYear：year
+  * @param  fMonth：month
+  * @param  fDate：day
+  * @retval None
+  */
+static void APP_ConfigRtcDate(uint8_t fDate , uint8_t fMonth , uint8_t fYear)
+{
+    RTC_DateStruct.day   = fDate;
+    RTC_DateStruct.month = fMonth;
+    RTC_DateStruct.year  = fYear;
+}
+
+/**
+  * @brief  Show date and time
+  * @param  None
+  * @retval None
+  */
+static void APP_ShowRtcCalendar(void)
+{
+    APP_UpadateRtcTimeStruct();
+    APP_UpadateRtcDateStruct();
+
+    sprintf((char*)aShowTime,"%.2d/%.2d/%.2d %.2d:%.2d:%.2d\r\n",
+                (2000 + RTC_DateStruct.year),
+                RTC_DateStruct.month,
+                RTC_DateStruct.day,
+                RTC_TimeStruct.hour,
+                RTC_TimeStruct.min,
+                RTC_TimeStruct.sec
+            );
+}
+
+/**
+  * @brief  Update time
+  * @param  None
+  * @retval None
+  */
+static void APP_UpadateRtcTimeStruct(void)
+{
+    TimeCounter = LL_RTC_TIME_Get(RTC);
+    RTC_TimeStruct.hour = (TimeCounter/3600);
+    RTC_TimeStruct.min  = (TimeCounter % 3600) / 60;
+    RTC_TimeStruct.sec  = (TimeCounter % 3600) % 60; 
+}
+
+/**
+  * @brief  Update date
+  * @param  None
+  * @retval None
+  */
+static void APP_UpadateRtcDateStruct(void)
+{
+    /* Update date when the time is 23:59:59 */
+    if (TimeCounter == 0x0001517FU)
+    {
+        if(RTC_DateStruct.day == EndOfMonth[RTC_DateStruct.month -1])
+        {
+            RTC_DateStruct.day = 1U;
+            RTC_DateStruct.month += 1U;
+        }
+        else
+        {
+            RTC_DateStruct.day = RTC_DateStruct.day + 0x1U;
+        }
+    }
 }
 
 /**
@@ -298,7 +444,7 @@ static void APP_ConfigUsart(USART_TypeDef *USARTx)
   */
 void APP_UsartTransmit_IT(USART_TypeDef *USARTx, uint8_t *pData, uint16_t Size)
 {
-    TxBuff = pData;
+    pTxBuff = pData;
     TxSize = Size;
     TxCount = Size;
 
@@ -376,8 +522,8 @@ void APP_UsartIRQCallback(USART_TypeDef *USARTx)
     /*Transmit data register empty*/
     if ((LL_USART_IsActiveFlag_TXE(USARTx) != RESET) && (LL_USART_IsEnabledIT_TXE(USARTx) != RESET))
     {
-        LL_USART_TransmitData8(USARTx, *TxBuff);
-        TxBuff++;
+        LL_USART_TransmitData8(USARTx, *pTxBuff);
+        pTxBuff++;
         if (--TxCount == 0U)
         {
             LL_USART_DisableIT_TXE(USARTx);
@@ -391,6 +537,85 @@ void APP_UsartIRQCallback(USART_TypeDef *USARTx)
     {
         LL_USART_DisableIT_TC(USARTx);
         return;
+    }
+}
+
+/**
+  * @brief  Main program.
+  * @param  None
+  * @retval int
+  */
+int main(void)
+{
+    /* Configure system clock */
+    APP_SystemClockConfig();
+
+    // UART初期化
+    memset(aRxBuffer, 0x00, sizeof(aRxBuffer));
+    memset(aTxBuffer, 0x00, sizeof(aTxBuffer));
+
+    APP_ConfigUsart(USART1);
+    // LL_USART_SendAutoBaudRateReq(USART1);
+    // APP_UsartReceive_IT(USART1, (uint8_t *)aRxBuffer, 1);
+
+    // DMA初期化
+    memset(aDST_Buffer, 0x00, sizeof(aDST_Buffer));
+    APP_DmaConfig();
+
+    // DMA転送完了待ち
+    // LL_mDelay(1);
+
+    // DMA転送エラー確認
+    if((s_dma_transfer_error_flg != false) || (s_dma_transfer_fail_flg != false)) {
+        while (1)
+        {
+            APP_UsartTransmit_IT(USART1, (uint8_t *)dma_fail_str, sizeof(dma_fail_str));
+            LL_mDelay(100);
+        }
+    }
+
+    // RTC初期化
+    LL_RTC_TimeTypeDef rtc_time_config;
+    APP_ConfigRtc();
+    APP_ConfigRtcDate(10, 9, 25);   // 2025/9/25 17:00:00
+    rtc_time_config.Hours      = 17;
+    rtc_time_config.Minutes    = 0;
+    rtc_time_config.Seconds    = 0;
+    if (LL_RTC_TIME_Init(RTC, LL_RTC_FORMAT_BIN, &rtc_time_config) != SUCCESS)   
+    {
+        // RTC初期化エラー
+    }
+
+    // RTCアラーム設定
+    LL_RTC_AlarmTypeDef rtc_alarm_config;
+    rtc_alarm_config.AlarmTime.Hours      = 17;
+    rtc_alarm_config.AlarmTime.Minutes    = 1;
+    rtc_alarm_config.AlarmTime.Seconds    = 0;
+    APP_ConfigRtcAlarm(&rtc_alarm_config);
+
+    // アプリ初期化
+    app_main_init();
+
+    while (1)
+    {
+        APP_UsartTransmit_IT(USART1, (uint8_t *)uart_test_str_buf, sizeof(uart_test_str_buf));
+        LL_mDelay(1);
+
+        // アプリメイン
+        app_main();
+
+        // RTCアラームチェック
+        if(g_is_rtc_alarm != false) {
+            APP_UsartTransmit_IT(USART1, (uint8_t *)g_rtc_alarm, sizeof(g_rtc_alarm));
+            LL_mDelay(1);
+            g_is_rtc_alarm = false;
+        } else {
+            APP_ShowRtcCalendar();
+            APP_UsartTransmit_IT(USART1, (uint8_t *)aShowTime, sizeof(aShowTime));
+            LL_mDelay(1);
+        }
+
+        LL_mDelay(1000);
     }
 }
 

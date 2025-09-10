@@ -25,6 +25,10 @@ extern void APP_TransferCompleteCallback(void);
 extern void APP_TransferErrorCallback(void);
 
 /* Includes ------------------------------------------------------------------*/
+#include <stdint.h>
+#include <string.h>
+#include <stdbool.h>
+
 #include "py32f0xx_ll_rcc.h"
 #include "py32f0xx_ll_bus.h"
 #include "py32f0xx_ll_system.h"
@@ -35,6 +39,7 @@ extern void APP_TransferErrorCallback(void);
 #include "py32f0xx_ll_dma.h"
 #include "py32f0xx_ll_gpio.h"
 #include "py32f0xx_ll_usart.h"
+#include "py32f0xx_ll_rtc.h"
 
 #if defined(USE_FULL_ASSERT)
 #include "py32_assert.h"

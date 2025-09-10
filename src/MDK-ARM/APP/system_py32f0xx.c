@@ -99,7 +99,7 @@ void SystemCoreClockUpdate(void)             /* Get Core Clock Frequency      */
   case RCC_CFGR_SWS_2:  /* LSE used as system clock */
     SystemCoreClock = LSE_VALUE;
     break;
-#endif
+#endif /* RCC_LSE_SUPPORT */
 #if defined(RCC_PLL_SUPPORT)
   case RCC_CFGR_SWS_1:  /* PLL used as system clock */
     if ((RCC->PLLCFGR & RCC_PLLCFGR_PLLSRC) == RCC_PLLCFGR_PLLSRC_HSI) /* HSI used as PLL clock source */
@@ -112,7 +112,7 @@ void SystemCoreClockUpdate(void)             /* Get Core Clock Frequency      */
       SystemCoreClock = 2 * HSE_VALUE;
     }
     break;
-#endif
+#endif /* RCC_PLL_SUPPORT */
   case 0x00000000U:  /* HSI used as system clock */
   default:                /* HSI used as system clock */
     hsifs = ((READ_BIT(RCC->ICSCR, RCC_ICSCR_HSI_FS)) >> RCC_ICSCR_HSI_FS_Pos);
@@ -135,7 +135,7 @@ void SystemCoreClockUpdate(void)             /* Get Core Clock Frequency      */
  */
 void SystemInit(void)
 {
-  /*Set the HSI clock to 8MHz by default*/
+  /* Set the HSI clock to 8MHz by default */
   RCC->ICSCR = (RCC->ICSCR & 0xFFFF0000) | (0x1 << 13) | ((*(uint32_t *)(0x1FFF0F04)) & 0x1FFF);
 
   /* Configure the Vector Table location add offset address ------------------*/
@@ -143,7 +143,7 @@ void SystemInit(void)
   SCB->VTOR = SRAM_BASE | VECT_TAB_OFFSET; /* Vector Table Relocation in Internal SRAM */
 #else
   SCB->VTOR = FLASH_BASE | VECT_TAB_OFFSET; /* Vector Table Relocation in Internal FLASH */
-#endif
+#endif /* VECT_TAB_SRAM */
 }
 
 #ifndef FORBID_VECT_TAB_MIGRATION
@@ -180,7 +180,7 @@ int __low_level_init(void)
 {
   uint8_t i;
   uint32_t *pFmcVect = (uint32_t *)(FLASH_BASE | VECT_TAB_OFFSET);
-  /* call IAR table copy function.*/
+  /* call IAR table copy function. */
   __iar_data_init3();
 
   for (i = 0; i < 48; i++)
@@ -207,10 +207,12 @@ int entry(void)
   }
 
   SCB->VTOR = SRAM_BASE;
-	
+  
   main();
   return 0;
 }
 #endif /* __ICCARM__ */
 #endif /* VECT_TAB_SRAM */
 #endif /* FORBID_VECT_TAB_MIGRATION */
+
+/************************ (C) COPYRIGHT Puya *****END OF FILE******************/

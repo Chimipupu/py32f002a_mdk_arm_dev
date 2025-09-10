@@ -9,7 +9,12 @@
 ## 逆スペック詐欺
 
 > [!CAUTION]
-> ⚠️この実装では、PY32F002Aに搭載されていないはずの機能の多くを実行しています(※)⚠️ <br>※[PY32F002AF15P6](https://www.py32.org/en/mcu/PY32F002Axx.html)🔗はシリコンがROM32KB,RAM4KBの[PY32F030](https://www.py32.org/en/mcu/PY32F030xx.html#introduction)🔗ということがほぼ確定(※)<br>※PY32F002AにはないはずのPLLでクロックを48MHzにできる<br>※PY32F002AにはないはずのDMAも動く<br>
+> ⚠️この実装では、PY32F002Aに未搭載のはずの機能の多くが実行、動作している(※)⚠️
+> ※[PY32F002AF15P6](https://www.py32.org/en/mcu/PY32F002Axx.html)🔗はシリコンがROM32KB,RAM4KBの[PY32F030](https://www.py32.org/en/mcu/PY32F030xx.html#introduction)🔗の可能性がある
+> ※PY32F002Aにはないはずの下記機能の実行と動作を確認
+> ➡️ PLLでクロックを48MHzにできる
+> ➡️ DMAも動く
+> ➡️ RTCも動く
 
 | 項目 | PUYA公表スペック<br>[PY32F002AF15P6](https://www.py32.org/en/mcu/PY32F002Axx.html)🔗 | 実際のスペック<br>(a.k.a [PY32F030](https://www.py32.org/en/mcu/PY32F030xx.html#introduction)🔗) |
 | ---- | ---- | ---- |
@@ -20,6 +25,7 @@
 | GPIO | x18本 | x18本 |
 | DMA | なし | **x3本** |
 | タイマー | 16bit高機能タイマー TIM1<br> 16bit汎用タイマー TIM3<br>低電力タイマー LPTIM | 16bit高機能タイマー TIM1<br> 16bit汎用タイマー TIM3,**TIM14,TIM16,TIM17**<br>低電力タイマー LPTIM |
+| RTC | (N/A) | **x1本** |
 | I2C | x1本 | x1本 |
 | SPI | x1本 | **x2本** |
 | UART | x1本 | **x2本** |

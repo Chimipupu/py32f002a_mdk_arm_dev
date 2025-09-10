@@ -47,6 +47,7 @@
 /* Private user code ---------------------------------------------------------*/
 
 /* External variables --------------------------------------------------------*/
+extern bool g_is_rtc_alarm;
 
 /******************************************************************************/
 /*           Cortex-M0+ Processor Interruption and Exception Handlers         */
@@ -112,6 +113,17 @@ void DMA1_Channel1_IRQHandler(void)
   {
     LL_DMA_ClearFlag_GI1(DMA1);
     APP_TransferCompleteCallback();
+  }
+}
+
+void RTC_IRQHandler(void)
+{
+  if ((LL_RTC_IsActiveFlag_ALR(RTC) != 0)&& (LL_RTC_IsEnabledIT_ALR(RTC) != 0))
+  {
+    g_is_rtc_alarm = true;
+
+    /* Clear alarm flag */
+    LL_RTC_ClearFlag_ALR(RTC);
   }
 }
 /************************ (C) COPYRIGHT Puya *****END OF FILE****/
