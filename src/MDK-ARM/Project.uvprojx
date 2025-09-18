@@ -596,9 +596,9 @@
           <GroupName>Startup</GroupName>
           <Files>
             <File>
-              <FileName>startup_py32f030xx.s</FileName>
+              <FileName>startup_py32f002xx.s</FileName>
               <FileType>2</FileType>
-              <FilePath>.\startup_py32f030xx.s</FilePath>
+              <FilePath>.\startup_py32f002xx.s</FilePath>
             </File>
           </Files>
         </Group>

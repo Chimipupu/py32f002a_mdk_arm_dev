@@ -41,7 +41,14 @@
 ;   <o> Stack Size (in Bytes) <0x0-0xFFFFFFFF:8>
 ; </h>
 
-Stack_Size      EQU     0x00000400
+; スタック領域 ... デフォルト 0x400 (1KB)
+; Stack_Size      EQU     0x00000400
+
+; スタック領域 ... デフォルト 0x200 (512B)
+Stack_Size      EQU     0x00000200
+
+; スタック領域 ... デフォルト 0x100 (256B)
+; Stack_Size      EQU     0x00000100
 
                 AREA    STACK, NOINIT, READWRITE, ALIGN=3
 Stack_Mem       SPACE   Stack_Size
@@ -88,37 +95,37 @@ __Vectors       DCD     __initial_sp              ; Top of Stack
                 DCD     SysTick_Handler           ; SysTick Handler
 
                 ; External Interrupts
-                DCD     0                              ; 0Reserved
-                DCD     0                              ; 1Reserved
-                DCD     0                              ; 2Reserved
+                DCD     WWDG_IRQHandler                ; 0Window Watchdog
+                DCD     PVD_IRQHandler                 ; 1PVD through EXTI Line detect
+                DCD     RTC_IRQHandler                 ; 2RTC through EXTI Line
                 DCD     FLASH_IRQHandler               ; 3FLASH
                 DCD     RCC_IRQHandler                 ; 4RCC
                 DCD     EXTI0_1_IRQHandler             ; 5EXTI Line 0 and 1
                 DCD     EXTI2_3_IRQHandler             ; 6EXTI Line 2 and 3
                 DCD     EXTI4_15_IRQHandler            ; 7EXTI Line 4 to 15
                 DCD     0                              ; 8Reserved 
-                DCD     0                              ; 9Reserved
-                DCD     0                              ; 10Reserved
+                DCD     DMA1_Channel1_IRQHandler       ; 9DMA1 Channel 1
+                DCD     DMA1_Channel2_3_IRQHandler     ; 10DMA1 Channel 2 and Channel 3
                 DCD     0                              ; 11Reserved 
                 DCD     ADC_COMP_IRQHandler            ; 12ADC&COMP1 
                 DCD     TIM1_BRK_UP_TRG_COM_IRQHandler ; 13TIM1 Break, Update, Trigger and Commutation
                 DCD     TIM1_CC_IRQHandler             ; 14TIM1 Capture Compare
                 DCD     0                              ; 15Reserved 
-                DCD     0                              ; 16Reserved
-                DCD     LPTIM1_IRQHandler              ; 17LPTIM1
+                DCD     TIM3_IRQHandler                ; 16TIM3
+                DCD     LPTIM1_IRQHandler              ; LPTIM1
                 DCD     0                              ; 18Reserved 
-                DCD     0                              ; 19Reserved
+                DCD     TIM14_IRQHandler               ; 19TIM14
                 DCD     0                              ; 20Reserved 
                 DCD     TIM16_IRQHandler               ; 21TIM16
-                DCD     0                              ; 22Reserved
+                DCD     TIM17_IRQHandler               ; 22TIM17
                 DCD     I2C1_IRQHandler                ; 23I2C1
                 DCD     0                              ; 24Reserved 
                 DCD     SPI1_IRQHandler                ; 25SPI1
-                DCD     0                              ; 26Reserved
+                DCD     SPI2_IRQHandler                ; 26SPI2
                 DCD     USART1_IRQHandler              ; 27USART1
-                DCD     0                              ; 28Reserved
+                DCD     USART2_IRQHandler              ; 28USART2
                 DCD     0                              ; 29Reserved
-                DCD     0                              ; 30Reserved
+                DCD     LED_IRQHandler                 ; 30LED
                 DCD     0                              ; 31Reserved
 __Vectors_End
 
@@ -166,33 +173,55 @@ SysTick_Handler PROC
 
 Default_Handler PROC
 
+                EXPORT  WWDG_IRQHandler                [WEAK]
+                EXPORT  PVD_IRQHandler                 [WEAK]
+                EXPORT  RTC_IRQHandler                 [WEAK]
                 EXPORT  FLASH_IRQHandler               [WEAK]
                 EXPORT  RCC_IRQHandler                 [WEAK]
                 EXPORT  EXTI0_1_IRQHandler             [WEAK]
                 EXPORT  EXTI2_3_IRQHandler             [WEAK]
-                EXPORT  EXTI4_15_IRQHandler            [WEAK]          
+                EXPORT  EXTI4_15_IRQHandler            [WEAK]   
+                EXPORT  DMA1_Channel1_IRQHandler       [WEAK]
+                EXPORT  DMA1_Channel2_3_IRQHandler     [WEAK]        
                 EXPORT  ADC_COMP_IRQHandler            [WEAK]
                 EXPORT  TIM1_BRK_UP_TRG_COM_IRQHandler [WEAK]
                 EXPORT  TIM1_CC_IRQHandler             [WEAK]
+                EXPORT  TIM3_IRQHandler                [WEAK]
                 EXPORT  LPTIM1_IRQHandler              [WEAK]
+                EXPORT  TIM14_IRQHandler               [WEAK]
                 EXPORT  TIM16_IRQHandler               [WEAK]
+                EXPORT  TIM17_IRQHandler               [WEAK]
                 EXPORT  I2C1_IRQHandler                [WEAK]
                 EXPORT  SPI1_IRQHandler                [WEAK]
+                EXPORT  SPI2_IRQHandler                [WEAK]
                 EXPORT  USART1_IRQHandler              [WEAK]
-            
+                EXPORT  USART2_IRQHandler              [WEAK]
+                EXPORT  LED_IRQHandler                 [WEAK]
+
+WWDG_IRQHandler            
+PVD_IRQHandler               
+RTC_IRQHandler              
 FLASH_IRQHandler              
 RCC_IRQHandler                
 EXTI0_1_IRQHandler             
 EXTI2_3_IRQHandler             
-EXTI4_15_IRQHandler      
+EXTI4_15_IRQHandler   
+DMA1_Channel1_IRQHandler     
+DMA1_Channel2_3_IRQHandler        
 ADC_COMP_IRQHandler          
 TIM1_BRK_UP_TRG_COM_IRQHandler
-TIM1_CC_IRQHandler        
+TIM1_CC_IRQHandler
+TIM3_IRQHandler               
 LPTIM1_IRQHandler
+TIM14_IRQHandler 
 TIM16_IRQHandler           
+TIM17_IRQHandler            
 I2C1_IRQHandler
 SPI1_IRQHandler             
-USART1_IRQHandler         
+SPI2_IRQHandler              
+USART1_IRQHandler          
+USART2_IRQHandler  
+LED_IRQHandler
                 B       .
                 ENDP
 
@@ -210,7 +239,7 @@ USART1_IRQHandler
 
                 IMPORT  __use_two_region_memory
                 EXPORT  __user_initial_stackheap
-
+                    
 __user_initial_stackheap
 
                 LDR     R0, =  Heap_Mem

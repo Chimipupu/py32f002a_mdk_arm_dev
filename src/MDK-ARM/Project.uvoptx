@@ -727,8 +727,8 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>.\startup_py32f030xx.s</PathWithFileName>
-      <FilenameWithoutPath>startup_py32f030xx.s</FilenameWithoutPath>
+      <PathWithFileName>.\startup_py32f002xx.s</PathWithFileName>
+      <FilenameWithoutPath>startup_py32f002xx.s</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
     </File>
