@@ -153,17 +153,7 @@
         <Ww>
           <count>0</count>
           <WinNumber>1</WinNumber>
-          <ItemText>aSRC_Const_Buffer</ItemText>
-        </Ww>
-        <Ww>
-          <count>1</count>
-          <WinNumber>1</WinNumber>
-          <ItemText>aDST_Buffer</ItemText>
-        </Ww>
-        <Ww>
-          <count>2</count>
-          <WinNumber>1</WinNumber>
-          <ItemText>pTxBuff</ItemText>
+          <ItemText>s_tx_data_buf</ItemText>
         </Ww>
       </WatchWindow1>
       <Tracepoint>

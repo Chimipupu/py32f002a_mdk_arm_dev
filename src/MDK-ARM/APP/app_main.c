@@ -23,21 +23,22 @@ typedef enum {
 } e_state_machine;
 
 static float s_math_pi;
-static uint8_t s_tx_data_buf[SM_TX_DATA_BUF_SIZE];
 static e_state_machine s_state = SM_NONE;
 
+static float math_pi_calc(uint8_t cnt);
 static void sm_init(void);
 static void sm_main(void);
 
 // ガウス・ルジャンドル法による円周率の計算
-float app_math_pi_calc(uint32_t cnt)
+static float math_pi_calc(uint8_t cnt)
 {
+    uint8_t i;
     float a = 1.0;
     float b = 1.0 / sqrt(2);
     float t = 1.0 / 4.0;
     float p = 1.0;
 
-    for (uint32_t i = 0; i < cnt; i++)
+    for (i = 0; i < cnt; i++)
     {
         float an = (a + b) / 2.0;
         float bn = sqrt(a * b);
@@ -59,7 +60,7 @@ float app_math_pi_calc(uint32_t cnt)
  * @brief ステートマシーン初期化
  * 
  */
-void sm_init(void)
+static void sm_init(void)
 {
     s_state = SM_MATH_CALC;
 }
@@ -68,20 +69,17 @@ void sm_init(void)
  * @brief ステートマシーン メイン
  * 
  */
-void sm_main(void)
+static void sm_main(void)
 {
+    char str_buf[16];
+
     switch (s_state)
     {
-        case SM_PROC_END:
-            printf("%s\r\n", s_tx_data_buf);
-            memset(s_tx_data_buf, 0x00, sizeof(s_tx_data_buf));
-            s_state = SM_IDLE;
-            break;
-
         case SM_MATH_CALC:
-            s_math_pi = app_math_pi_calc(4);
-            sprintf((char *)&s_tx_data_buf[0], "pi = %f", s_math_pi);
-            s_state = SM_PROC_END;
+            s_math_pi = math_pi_calc(4);
+            sprintf(str_buf, "pi = %f\r\n", s_math_pi);
+            printf("%s", str_buf);
+            s_state = SM_IDLE;
             break;
 
         case SM_NONE:
@@ -98,7 +96,7 @@ void sm_main(void)
  */
 void app_main_init(void)
 {
-    memset(s_tx_data_buf, 0x00, sizeof(s_tx_data_buf));
+    // NOP
 }
 
 /**
