@@ -25,9 +25,9 @@
 /* Private variables ---------------------------------------------------------*/
 const uint8_t g_lptim_irq_str[] = "LPTIM IRQ!\r\n";
 const uint8_t g_rtc_alarm[] = "RTC Alarm!\r\n";
-const uint8_t aSRC_Const_Buffer[] = "PY32F002A DMA Test Str : ABCDEF";
-const uint8_t dma_fail_str[] = "PY32F002A DMA Fail!\r\n";
-const uint8_t EndOfMonth[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+const uint8_t g_dma_src_str[] = "PY32F002A DMA Test Str : ABCDEF";
+const uint8_t g_dma_fail_str[] = "PY32F002A DMA Fail!\r\n";
+const uint8_t g_end_of_month[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 
 // uint8_t aTxBuffer[UART_TX_BUF_SIZE];
 // uint8_t aRxBuffer[UART_RX_BUF_SIZE];
@@ -44,8 +44,7 @@ __IO ITStatus UartReady = RESET;
 
 extern uint32_t SystemCoreClock;
 
-struct time_t
-{
+struct time_t {
     uint8_t sec;
     uint8_t min;
     uint8_t hour;
@@ -53,15 +52,14 @@ struct time_t
 struct time_t RTC_TimeStruct;
 struct time_t RTC_AlarmStruct;
 
-struct date_t
-{
+struct date_t {
     uint8_t month;
     uint8_t day;
     uint8_t year;
 };
 struct date_t RTC_DateStruct;
 
-uint32_t TimeCounter = 0;
+uint32_t g_tim_cnt = 0;
 uint8_t aShowTime[50] = {0};
 
 bool g_is_rtc_alarm = false;
@@ -120,7 +118,7 @@ static void APP_DmaConfig(void)
 
     LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMA1);
 
-    dma_initstruct.PeriphOrM2MSrcAddress  = (uint32_t)&aSRC_Const_Buffer;       // DMA 転送元
+    dma_initstruct.PeriphOrM2MSrcAddress  = (uint32_t)&g_dma_src_str;       // DMA 転送元
     dma_initstruct.MemoryOrM2MDstAddress  = (uint32_t)&aDST_Buffer;             // DMA 転送先
     dma_initstruct.Direction              = LL_DMA_DIRECTION_MEMORY_TO_MEMORY;  // DMA Mem to Mem
     dma_initstruct.Mode                   = LL_DMA_MODE_NORMAL;                 // DMA ワンショット
@@ -158,7 +156,7 @@ void APP_TransferCompleteCallback(void)
 {
     for(uint16_t i = 0 ; i < BUFFER_SIZE; i++)
     {
-        if(aDST_Buffer[i] != aSRC_Const_Buffer[i])
+        if(aDST_Buffer[i] != g_dma_src_str[i])
         {
             s_dma_transfer_fail_flg = true;
             break;
@@ -367,10 +365,10 @@ static void APP_ShowRtcCalendar(void)
   */
 static void APP_UpadateRtcTimeStruct(void)
 {
-    TimeCounter = LL_RTC_TIME_Get(RTC);
-    RTC_TimeStruct.hour = (TimeCounter/3600);
-    RTC_TimeStruct.min  = (TimeCounter % 3600) / 60;
-    RTC_TimeStruct.sec  = (TimeCounter % 3600) % 60; 
+    g_tim_cnt = LL_RTC_TIME_Get(RTC);
+    RTC_TimeStruct.hour = (g_tim_cnt/3600);
+    RTC_TimeStruct.min  = (g_tim_cnt % 3600) / 60;
+    RTC_TimeStruct.sec  = (g_tim_cnt % 3600) % 60; 
 }
 
 /**
@@ -381,9 +379,9 @@ static void APP_UpadateRtcTimeStruct(void)
 static void APP_UpadateRtcDateStruct(void)
 {
     /* Update date when the time is 23:59:59 */
-    if (TimeCounter == 0x0001517FU)
+    if (g_tim_cnt == 0x0001517FU)
     {
-        if(RTC_DateStruct.day == EndOfMonth[RTC_DateStruct.month -1])
+        if(RTC_DateStruct.day == g_end_of_month[RTC_DateStruct.month -1])
         {
             RTC_DateStruct.day = 1U;
             RTC_DateStruct.month += 1U;
@@ -671,7 +669,7 @@ int main(void)
     if((s_dma_transfer_error_flg != false) || (s_dma_transfer_fail_flg != false)) {
         while (1)
         {
-            APP_UsartTransmit_IT(USART1, (uint8_t *)dma_fail_str, sizeof(dma_fail_str));
+            APP_UsartTransmit_IT(USART1, (uint8_t *)g_dma_fail_str, sizeof(g_dma_fail_str));
             LL_mDelay(100);
         }
     }

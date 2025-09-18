@@ -41,7 +41,14 @@
 ;   <o> Stack Size (in Bytes) <0x0-0xFFFFFFFF:8>
 ; </h>
 
-Stack_Size      EQU     0x00000400
+; スタック領域 ... デフォルト 0x400 (1KB)
+; Stack_Size      EQU     0x00000400
+
+; スタック領域 ... デフォルト 0x200 (512B)
+Stack_Size      EQU     0x00000200
+
+; スタック領域 ... デフォルト 0x100 (256B)
+; Stack_Size      EQU     0x00000100
 
                 AREA    STACK, NOINIT, READWRITE, ALIGN=3
 Stack_Mem       SPACE   Stack_Size
