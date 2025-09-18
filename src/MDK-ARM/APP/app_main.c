@@ -70,14 +70,12 @@ static void sm_init(void)
  */
 static void sm_main(void)
 {
-    char str_buf[16];
     float pi;
 
     switch (s_state) {
         case SM_MATH_CALC:
             pi = math_pi_calc(4);
-            sprintf(str_buf, "pi = %f\r\n", pi);
-            printf("%s", str_buf);
+            printf("pi = %f\r\n", pi);
             s_state = SM_IDLE;
             break;
 
