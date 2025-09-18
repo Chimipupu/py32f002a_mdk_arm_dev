@@ -22,7 +22,6 @@ typedef enum {
     SM_MATH_CALC    = 0x40, // 円周率計算状態
 } e_state_machine;
 
-static float s_math_pi;
 static e_state_machine s_state = SM_NONE;
 
 static float math_pi_calc(uint8_t cnt);
@@ -72,12 +71,12 @@ static void sm_init(void)
 static void sm_main(void)
 {
     char str_buf[16];
+    float pi;
 
-    switch (s_state)
-    {
+    switch (s_state) {
         case SM_MATH_CALC:
-            s_math_pi = math_pi_calc(4);
-            sprintf(str_buf, "pi = %f\r\n", s_math_pi);
+            pi = math_pi_calc(4);
+            sprintf(str_buf, "pi = %f\r\n", pi);
             printf("%s", str_buf);
             s_state = SM_IDLE;
             break;
