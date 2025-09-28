@@ -9,9 +9,12 @@
  * 
  */
 #include "app_main.h"
-#include "main.h"
 
-#define SM_TX_DATA_BUF_SIZE     64
+#define CALC_MATH_PI
+#ifdef CALC_MATH_PI
+#include <math.h>
+#define MATH_PI        3.14159265358979323846
+#endif // CALC_MATH_PI
 
 typedef enum {
     // SM_ERROR        = 0xFF, // エラー状態
@@ -24,9 +27,11 @@ typedef enum {
 
 static e_state_machine s_state = SM_NONE;
 
-static float math_pi_calc(uint8_t cnt);
 static void sm_init(void);
 static void sm_main(void);
+
+#ifdef CALC_MATH_PI
+static float math_pi_calc(uint8_t cnt);
 
 // ガウス・ルジャンドル法による円周率の計算
 static float math_pi_calc(uint8_t cnt)
@@ -54,6 +59,7 @@ static float math_pi_calc(uint8_t cnt)
 
     return pi;
 }
+#endif // CALC_MATH_PI
 
 /**
  * @brief ステートマシーン初期化
@@ -74,8 +80,13 @@ static void sm_main(void)
 
     switch (s_state) {
         case SM_MATH_CALC:
+#ifdef CALC_MATH_PI
             pi = math_pi_calc(4);
+#else
+            pi = MATH_PI;
+#endif
             printf("pi = %f\r\n", pi);
+
             s_state = SM_IDLE;
             break;
 

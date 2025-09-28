@@ -14,8 +14,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
-#include <stdarg.h>
-#include <math.h>
+#include <stdbool.h>
 
 // レジスタを8/16/32bitでR/Wするマクロ
 #define REG_READ_BYTE(base, offset)         (*(volatile uint8_t  *)((base) + (offset)))

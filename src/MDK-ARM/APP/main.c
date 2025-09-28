@@ -3,7 +3,7 @@
  * @author Chimipupu(https://github.com/Chimipupu)
  * @brief  PY32F002A メイン
  * @version 0.1
- * @date 2025-08-23
+ * @date 2025-09-28
  *
  * @copyright Copyright (c) 2025 Chimipupu All Rights Reserved.
  */
@@ -29,18 +29,18 @@ const uint8_t g_dma_src_str[] = "PY32F002A DMA Test Str : ABCDEF";
 const uint8_t g_dma_fail_str[] = "PY32F002A DMA Fail!\r\n";
 const uint8_t g_end_of_month[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 
-// uint8_t aTxBuffer[UART_TX_BUF_SIZE];
-// uint8_t aRxBuffer[UART_RX_BUF_SIZE];
+#define UART_BUF_SIZE            256
 
-uint8_t *pTxBuff = NULL;
-__IO uint16_t TxSize = 0;
-__IO uint16_t TxCount = 0;
+// uint8_t g_tx_buf[UART_BUF_SIZE] = {0};
+// uint8_t g_rx_buf[UART_BUF_SIZE] = {0};
 
-uint8_t *RxBuff = NULL;
-__IO uint16_t RxSize = 0;
-__IO uint16_t RxCount = 0;
+uint8_t *p_tx_buf = NULL;
+volatile uint16_t g_tx_size = 0;
+volatile uint16_t g_tx_cnt = 0;
 
-__IO ITStatus UartReady = RESET;
+uint8_t *p_rx_buf = NULL;
+volatile uint16_t g_rx_size = 0;
+volatile uint16_t g_rx_cnt = 0;
 
 extern uint32_t SystemCoreClock;
 
@@ -473,9 +473,9 @@ void APP_UsartTransmit_IT(USART_TypeDef *USARTx, uint8_t *pData, uint16_t Size)
 {
     volatile uint8_t i;
 
-    pTxBuff = pData;
-    TxSize = Size;
-    TxCount = Size;
+    p_tx_buf = pData;
+    g_tx_size = Size;
+    g_tx_cnt = Size;
 
     LL_USART_EnableIT_TXE(USARTx);
 
@@ -496,9 +496,9 @@ void APP_UsartTransmit_IT(USART_TypeDef *USARTx, uint8_t *pData, uint16_t Size)
   */
 void APP_UsartReceive_IT(USART_TypeDef *USARTx, uint8_t *pData, uint16_t Size)
 {
-    RxBuff = pData;
-    RxSize = Size;
-    RxCount = Size;
+    p_rx_buf = pData;
+    g_rx_size = Size;
+    g_rx_cnt = Size;
 
     /*Enable parity error interrupt*/
     LL_USART_EnableIT_PE(USARTx);
@@ -524,10 +524,10 @@ void APP_UsartIRQCallback(USART_TypeDef *USARTx)
     {
         if ((LL_USART_IsActiveFlag_RXNE(USARTx) != RESET) && (LL_USART_IsEnabledIT_RXNE(USARTx) != RESET))
         {
-            *RxBuff = LL_USART_ReceiveData8(USARTx);
-            RxBuff++;
+            *p_rx_buf = LL_USART_ReceiveData8(USARTx);
+            p_rx_buf++;
 
-            if (--RxCount == 0U)
+            if (--g_rx_cnt == 0U)
             {
                 LL_USART_DisableIT_RXNE(USARTx);
                 LL_USART_DisableIT_PE(USARTx);
@@ -543,9 +543,9 @@ void APP_UsartIRQCallback(USART_TypeDef *USARTx)
         /* Used for auto baud rate detection */
         if ((LL_USART_IsActiveFlag_RXNE(USARTx) != RESET) && (LL_USART_IsEnabledIT_RXNE(USARTx) != RESET))
         {
-            *RxBuff = LL_USART_ReceiveData8(USARTx);
-            RxBuff++;
-            if (--RxCount == 0U)
+            *p_rx_buf = LL_USART_ReceiveData8(USARTx);
+            p_rx_buf++;
+            if (--g_rx_cnt == 0U)
             {
                 LL_USART_DisableIT_RXNE(USARTx);
                 LL_USART_DisableIT_PE(USARTx);
@@ -557,9 +557,9 @@ void APP_UsartIRQCallback(USART_TypeDef *USARTx)
     /*Transmit data register empty*/
     if ((LL_USART_IsActiveFlag_TXE(USARTx) != RESET) && (LL_USART_IsEnabledIT_TXE(USARTx) != RESET))
     {
-        LL_USART_TransmitData8(USARTx, *pTxBuff);
-        pTxBuff++;
-        if (--TxCount == 0U)
+        LL_USART_TransmitData8(USARTx, *p_tx_buf);
+        p_tx_buf++;
+        if (--g_tx_cnt == 0U)
         {
             LL_USART_DisableIT_TXE(USARTx);
             LL_USART_EnableIT_TC(USARTx);
@@ -652,11 +652,9 @@ int main(void)
     APP_ConfigLPTIMOneShot();
 
     // UART初期化
-    // memset(aRxBuffer, 0x00, sizeof(aRxBuffer));
-    // memset(aTxBuffer, 0x00, sizeof(aTxBuffer));
+    // memset(g_rx_buf, 0x00, sizeof(g_rx_buf));
+    // memset(g_tx_buf, 0x00, sizeof(g_tx_buf));
     APP_ConfigUsart(USART1);
-    // LL_USART_SendAutoBaudRateReq(USART1);
-    // APP_UsartReceive_IT(USART1, (uint8_t *)aRxBuffer, 1);
 
     // DMA初期化
     memset(aDST_Buffer, 0x00, sizeof(aDST_Buffer));
@@ -681,8 +679,7 @@ int main(void)
     rtc_time_config.Hours      = 17;
     rtc_time_config.Minutes    = 0;
     rtc_time_config.Seconds    = 0;
-    if (LL_RTC_TIME_Init(RTC, LL_RTC_FORMAT_BIN, &rtc_time_config) != SUCCESS)   
-    {
+    if (LL_RTC_TIME_Init(RTC, LL_RTC_FORMAT_BIN, &rtc_time_config) != SUCCESS) {
         // RTC初期化エラー
     }
 

@@ -49,9 +49,6 @@ extern void APP_LPTIMCallback(void);
 #include "py32_assert.h"
 #endif /* USE_FULL_ASSERT */
 
-#define UART_TX_BUF_SIZE            256
-#define UART_RX_BUF_SIZE            256
-
 /* Private includes ----------------------------------------------------------*/
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
