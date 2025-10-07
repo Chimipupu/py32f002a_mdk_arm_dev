@@ -108,11 +108,15 @@ void app_main_init(void)
  */
 void app_main(void)
 {
-    float pi;
+    volatile float pi = 0;
+
 #ifdef CALC_MATH_PI
     pi = math_pi_calc(4);
 #else
     pi = MATH_PI;
 #endif
+
+#ifdef DEBUG_PRINTF_USE
     printf("pi = %f\r\n", pi);
+#endif
 }

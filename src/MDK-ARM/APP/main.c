@@ -93,6 +93,7 @@ volatile static bool s_is_lptim_irq = false;
 volatile static uint8_t s_hsi_freq = 0;
 volatile static uint8_t s_pll_freq = 0;
 
+#ifdef DEBUG_PRINTF_USE
 // printf()用
 int __io_putchar(int ch)
 {
@@ -110,6 +111,7 @@ int fputc(int ch, FILE *f)
 {
     return __io_putchar(ch);
 }
+#endif
 
 static void APP_DmaConfig(void)
 {
@@ -699,30 +701,30 @@ int main(void)
 
     while (1)
     {
+#ifdef DEBUG_PRINTF_USE
         printf("PY32F002A Develop By Chimipupu\r\n");
         printf("HSI = %d MHz, PLL Freq = %d MHz\r\n", s_hsi_freq, s_pll_freq);
 
         // 起動からの時間(秒単位)
         printf("Execution Time : %d sec\r\n", s_lptim_cnt);
 
-        // アプリメイン
-        app_main();
+        // RTCの時刻表示
+        APP_ShowRtcCalendar();
+        printf("%s\r\n", aShowTime);
+#endif
 
         // LPTIMチェック
         if(s_is_lptim_irq != false) {
             s_is_lptim_irq = false;
-            printf("LPTIM IRQ!\r\n");
         }
 
         // RTCアラームチェック
         if(g_is_rtc_alarm != false) {
             g_is_rtc_alarm = false;
-            printf("RTC Alarm!\r\n");
         }
 
-        // RTCの時刻表示
-        APP_ShowRtcCalendar();
-        printf("%s\r\n", aShowTime);
+        // アプリメイン
+        app_main();
 
         LL_mDelay(500);
     }

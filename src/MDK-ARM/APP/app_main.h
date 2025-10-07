@@ -16,6 +16,8 @@
 #include <string.h>
 #include <stdbool.h>
 
+// #define DEBUG_PRINTF_USE
+
 #define UINT_8_MAX     255
 #define UINT_16_MAX    65535
 #define UINT_32_MAX    0xffffffffU  /* 4294967295U */
