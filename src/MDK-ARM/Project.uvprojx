@@ -339,7 +339,7 @@
             <v6Rtti>0</v6Rtti>
             <VariousControls>
               <MiscControls></MiscControls>
-              <Define>USE_FULL_LL_DRIVER,PY32F030x6,I_AGREE_TO_YOUR_DISCLAIMER</Define>
+              <Define>USE_FULL_LL_DRIVER,PY32F030x6</Define>
               <Undefine></Undefine>
               <IncludePath>..\Inc;..\..\..\Drivers\CMSIS\Include;..\..\..\Drivers\CMSIS\Device\PY32F0xx\Include;..\..\..\Drivers\PY32F0xx_HAL_Driver\Inc;.\Inc;.\Driver\Inc</IncludePath>
             </VariousControls>

@@ -16,6 +16,7 @@
 #define MATH_PI        3.14159265358979323846
 #endif // CALC_MATH_PI
 
+#if 0
 typedef enum {
     // SM_ERROR        = 0xFF, // エラー状態
     SM_NONE         = 0x00, // 状態なし
@@ -29,6 +30,7 @@ static e_state_machine s_state = SM_NONE;
 
 static void sm_init(void);
 static void sm_main(void);
+#endif
 
 #ifdef CALC_MATH_PI
 static float math_pi_calc(uint8_t cnt);
@@ -61,6 +63,7 @@ static float math_pi_calc(uint8_t cnt)
 }
 #endif // CALC_MATH_PI
 
+#if 0
 /**
  * @brief ステートマシーン初期化
  * 
@@ -76,18 +79,9 @@ static void sm_init(void)
  */
 static void sm_main(void)
 {
-    float pi;
-
     switch (s_state) {
         case SM_MATH_CALC:
-#ifdef CALC_MATH_PI
-            pi = math_pi_calc(4);
-#else
-            pi = MATH_PI;
-#endif
-            printf("pi = %f\r\n", pi);
-
-            s_state = SM_IDLE;
+            // NOP
             break;
 
         case SM_NONE:
@@ -97,6 +91,7 @@ static void sm_main(void)
             break;
     }
 }
+#endif
 
 /**
  * @brief アプリメイン初期化
@@ -113,5 +108,11 @@ void app_main_init(void)
  */
 void app_main(void)
 {
-    sm_main();
+    float pi;
+#ifdef CALC_MATH_PI
+    pi = math_pi_calc(4);
+#else
+    pi = MATH_PI;
+#endif
+    printf("pi = %f\r\n", pi);
 }
