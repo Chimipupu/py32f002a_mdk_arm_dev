@@ -16,6 +16,11 @@
 #include <string.h>
 #include <stdbool.h>
 
+#define UINT_8_MAX     255
+#define UINT_16_MAX    65535
+#define UINT_32_MAX    0xffffffffU  /* 4294967295U */
+#define UINT_64_MAX    0xffffffffffffffffULL /* 18446744073709551615ULL */
+
 // レジスタを8/16/32bitでR/Wするマクロ
 #define REG_READ_BYTE(base, offset)         (*(volatile uint8_t  *)((base) + (offset)))
 #define REG_READ_WORD(base, offset)         (*(volatile uint16_t *)((base) + (offset)))

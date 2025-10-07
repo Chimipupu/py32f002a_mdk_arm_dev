@@ -64,6 +64,8 @@ uint8_t aShowTime[50] = {0};
 
 bool g_is_rtc_alarm = false;
 
+static uint32_t s_lptim_cnt = 0;
+
 /* Private function prototypes -----------------------------------------------*/
 static void APP_SystemClockConfig(void);
 static void APP_ConfigUsart(USART_TypeDef *USARTx);
@@ -604,8 +606,8 @@ static void APP_ConfigLPTIMOneShot(void)
     LL_LPTIM_Enable(LPTIM1);
 
 #ifdef LPTIM_CLOCK_SRC_LSI
-    // (KSI32.768KHz/1分周)/32768 = 1Hz = 1000ms
-    LL_LPTIM_SetAutoReload(LPTIM1, 51);
+    // (LSI 32.768KHz/1分周)/32768 = 1Hz = 1000ms
+    LL_LPTIM_SetAutoReload(LPTIM1, 32768);
 #else
     // (48MHz/128分周)/375000 = 1Hz = 1000ms
     LL_LPTIM_SetAutoReload(LPTIM1, 375000);
@@ -624,6 +626,8 @@ static void APP_ConfigLPTIMOneShot(void)
  */
 void APP_LPTIMCallback(void)
 {
+    s_lptim_cnt = (s_lptim_cnt + 1) % UINT_32_MAX;
+
     s_is_lptim_irq = true;
 
     // LPTIM再起動
@@ -697,6 +701,9 @@ int main(void)
     {
         printf("PY32F002A Develop By Chimipupu\r\n");
         printf("HSI = %d MHz, PLL Freq = %d MHz\r\n", s_hsi_freq, s_pll_freq);
+
+        // 起動からの時間(秒単位)
+        printf("Execution Time : %d sec\r\n", s_lptim_cnt);
 
         // アプリメイン
         app_main();
