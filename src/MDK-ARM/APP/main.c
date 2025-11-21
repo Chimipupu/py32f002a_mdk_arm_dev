@@ -373,7 +373,7 @@ static void APP_UpadateRtcTimeStruct(void)
     g_tim_cnt = LL_RTC_TIME_Get(RTC);
     RTC_TimeStruct.hour = (g_tim_cnt/3600);
     RTC_TimeStruct.min  = (g_tim_cnt % 3600) / 60;
-    RTC_TimeStruct.sec  = (g_tim_cnt % 3600) % 60; 
+    RTC_TimeStruct.sec  = (g_tim_cnt % 3600) % 60;
 }
 
 /**
@@ -682,8 +682,8 @@ int main(void)
     // RTC初期化
     LL_RTC_TimeTypeDef rtc_time_config;
     APP_ConfigRtc();
-    APP_ConfigRtcDate(10, 9, 25);   // 2025/9/25 17:00:00
-    rtc_time_config.Hours      = 17;
+    APP_ConfigRtcDate(1, 1, 26);   // 日、月、年
+    rtc_time_config.Hours      = 0;
     rtc_time_config.Minutes    = 0;
     rtc_time_config.Seconds    = 0;
     if (LL_RTC_TIME_Init(RTC, LL_RTC_FORMAT_BIN, &rtc_time_config) != SUCCESS) {
@@ -692,26 +692,26 @@ int main(void)
 
     // RTCアラーム設定
     LL_RTC_AlarmTypeDef rtc_alarm_config;
-    rtc_alarm_config.AlarmTime.Hours      = 17;
-    rtc_alarm_config.AlarmTime.Minutes    = 1;
+    rtc_alarm_config.AlarmTime.Hours      = 0;
+    rtc_alarm_config.AlarmTime.Minutes    = 3;
     rtc_alarm_config.AlarmTime.Seconds    = 0;
     APP_ConfigRtcAlarm(&rtc_alarm_config);
 
     // アプリ初期化
     app_main_init();
 
+    DBG_PRINTF("PY32F002A Develop By Chimipupu\r\n");
+    DBG_PRINTF("HSI = %d MHz, PLL Freq = %d MHz\r\n", s_hsi_freq, s_pll_freq);
+
+    // 起動からの時間(秒単位)
+    DBG_PRINTF("Execution Time : %d sec\r\n", s_lptim_cnt);
+
+    // RTCの時刻表示
+    APP_ShowRtcCalendar();
+    DBG_PRINTF("%s\r\n", aShowTime);
+
     while (1)
     {
-        DBG_PRINTF("PY32F002A Develop By Chimipupu\r\n");
-        DBG_PRINTF("HSI = %d MHz, PLL Freq = %d MHz\r\n", s_hsi_freq, s_pll_freq);
-
-        // 起動からの時間(秒単位)
-        DBG_PRINTF("Execution Time : %d sec\r\n", s_lptim_cnt);
-
-        // RTCの時刻表示
-        APP_ShowRtcCalendar();
-        DBG_PRINTF("%s\r\n", aShowTime);
-
         // LPTIMチェック
         if(s_is_lptim_irq != false) {
             s_is_lptim_irq = false;
@@ -724,8 +724,6 @@ int main(void)
 
         // アプリメイン
         app_main();
-
-        LL_mDelay(500);
     }
 }
 

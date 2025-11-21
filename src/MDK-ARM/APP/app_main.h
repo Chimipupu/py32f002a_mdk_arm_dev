@@ -17,7 +17,7 @@
 #include <stdbool.h>
 
 // (DEBUG)デバッグ用printf()
-// #define DEBUG_PRINTF_USE
+#define DEBUG_PRINTF_USE
 
 #ifdef DEBUG_PRINTF_USE
 #define DBG_PRINTF      printf

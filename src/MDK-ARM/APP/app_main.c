@@ -72,5 +72,5 @@ void app_main_init(void)
 void app_main(void)
 {
     // ステートマシーン初期化
-    sm_init();
+    sm_main();
 }
