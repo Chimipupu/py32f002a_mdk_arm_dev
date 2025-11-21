@@ -341,7 +341,7 @@
               <MiscControls></MiscControls>
               <Define>USE_FULL_LL_DRIVER,PY32F030x6</Define>
               <Undefine></Undefine>
-              <IncludePath>..\Inc;..\..\..\Drivers\CMSIS\Include;..\..\..\Drivers\CMSIS\Device\PY32F0xx\Include;..\..\..\Drivers\PY32F0xx_HAL_Driver\Inc;.\Inc;.\Driver\Inc</IncludePath>
+              <IncludePath>..\Inc;..\..\..\Drivers\CMSIS\Include;..\..\..\Drivers\CMSIS\Device\PY32F0xx\Include;..\..\..\Drivers\PY32F0xx_HAL_Driver\Inc;.\Inc;.\Driver\Inc;.\APP</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -606,19 +606,14 @@
           <GroupName>App</GroupName>
           <Files>
             <File>
+              <FileName>app_main.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\APP\app_main.c</FilePath>
+            </File>
+            <File>
               <FileName>main.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\APP\main.c</FilePath>
-            </File>
-            <File>
-              <FileName>main.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\APP\main.h</FilePath>
-            </File>
-            <File>
-              <FileName>py32_assert.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\APP\py32_assert.h</FilePath>
             </File>
             <File>
               <FileName>py32f0xx_it.c</FileName>
@@ -626,24 +621,14 @@
               <FilePath>.\APP\py32f0xx_it.c</FilePath>
             </File>
             <File>
-              <FileName>py32f0xx_it.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\APP\py32f0xx_it.h</FilePath>
-            </File>
-            <File>
               <FileName>system_py32f0xx.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\APP\system_py32f0xx.c</FilePath>
             </File>
             <File>
-              <FileName>app_main.c</FileName>
+              <FileName>state_machine.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\APP\app_main.c</FilePath>
-            </File>
-            <File>
-              <FileName>app_main.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\APP\app_main.h</FilePath>
+              <FilePath>.\APP\state_machine.c</FilePath>
             </File>
           </Files>
         </Group>

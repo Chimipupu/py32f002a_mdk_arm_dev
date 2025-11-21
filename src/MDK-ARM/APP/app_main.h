@@ -25,6 +25,12 @@
 #define DBG_PRINTF(...)  ((void)0)
 #endif
 
+// #define CALC_MATH_PI
+#ifdef CALC_MATH_PI
+#include <math.h>
+#define MATH_PI        3.14159265358979323846
+#endif // CALC_MATH_PI
+
 #define UINT_8_MAX     255
 #define UINT_16_MAX    65535
 #define UINT_32_MAX    0xffffffffU  /* 4294967295U */

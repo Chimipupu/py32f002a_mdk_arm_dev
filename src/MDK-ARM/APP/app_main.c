@@ -9,28 +9,7 @@
  * 
  */
 #include "app_main.h"
-
-#define CALC_MATH_PI
-#ifdef CALC_MATH_PI
-#include <math.h>
-#define MATH_PI        3.14159265358979323846
-#endif // CALC_MATH_PI
-
-#if 0
-typedef enum {
-    // SM_ERROR        = 0xFF, // エラー状態
-    SM_NONE         = 0x00, // 状態なし
-    SM_IDLE         = 0x10, // アイドル状態
-    // SM_BUSY         = 0x20, // ビジー状態
-    SM_PROC_END     = 0x30, // 処理完了状態
-    SM_MATH_CALC    = 0x40, // 円周率計算状態
-} e_state_machine;
-
-static e_state_machine s_state = SM_NONE;
-
-static void sm_init(void);
-static void sm_main(void);
-#endif
+#include "state_machine.h"
 
 #ifdef CALC_MATH_PI
 static float math_pi_calc(uint8_t cnt);
@@ -61,52 +40,8 @@ static float math_pi_calc(uint8_t cnt)
 
     return pi;
 }
-#endif // CALC_MATH_PI
 
-#if 0
-/**
- * @brief ステートマシーン初期化
- * 
- */
-static void sm_init(void)
-{
-    s_state = SM_MATH_CALC;
-}
-
-/**
- * @brief ステートマシーン メイン
- * 
- */
-static void sm_main(void)
-{
-    switch (s_state) {
-        case SM_MATH_CALC:
-            // NOP
-            break;
-
-        case SM_NONE:
-        case SM_IDLE:
-        default:
-            s_state = SM_MATH_CALC;
-            break;
-    }
-}
-#endif
-
-/**
- * @brief アプリメイン初期化
- * 
- */
-void app_main_init(void)
-{
-    // NOP
-}
-
-/**
- * @brief アプリメイン
- * 
- */
-void app_main(void)
+static void math_pi_print(void)
 {
     volatile float pi = 0;
 
@@ -117,4 +52,25 @@ void app_main(void)
 #endif
 
     DBG_PRINTF("pi = %f\r\n", pi);
+}
+#endif // CALC_MATH_PI
+
+/**
+ * @brief アプリメイン初期化
+ * 
+ */
+void app_main_init(void)
+{
+    // ステートマシーン初期化
+    sm_init();
+}
+
+/**
+ * @brief アプリメイン
+ * 
+ */
+void app_main(void)
+{
+    // ステートマシーン初期化
+    sm_init();
 }
