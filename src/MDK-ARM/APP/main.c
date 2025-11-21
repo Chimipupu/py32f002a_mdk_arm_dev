@@ -20,16 +20,15 @@
 
 /* Private define ------------------------------------------------------------*/
 #define LPTIM_CLOCK_SRC_LSI
-#define RTC_ASYNCH_PREDIV          ((uint32_t)0x7FFF)
+#define RTC_ASYNCH_PREDIV        ((uint32_t)0x7FFF)
+#define UART_BUF_SIZE            256
 
 /* Private variables ---------------------------------------------------------*/
-const uint8_t g_lptim_irq_str[] = "LPTIM IRQ!\r\n";
-const uint8_t g_rtc_alarm[] = "RTC Alarm!\r\n";
-const uint8_t g_dma_src_str[] = "PY32F002A DMA Test Str : ABCDEF";
-const uint8_t g_dma_fail_str[] = "PY32F002A DMA Fail!\r\n";
+const uint8_t g_lptim_irq_str[]  = "LPTIM IRQ!\r\n";
+const uint8_t g_rtc_alarm[]      = "RTC Alarm!\r\n";
+const uint8_t g_dma_src_str[]    = "PY32F002A DMA Test Str : ABCDEF";
+const uint8_t g_dma_fail_str[]   = "PY32F002A DMA Fail!\r\n";
 const uint8_t g_end_of_month[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-
-#define UART_BUF_SIZE            256
 
 // uint8_t g_tx_buf[UART_BUF_SIZE] = {0};
 // uint8_t g_rx_buf[UART_BUF_SIZE] = {0};
@@ -94,12 +93,13 @@ volatile static uint8_t s_hsi_freq = 0;
 volatile static uint8_t s_pll_freq = 0;
 
 #ifdef DEBUG_PRINTF_USE
-// printf()用
+// DBG_PRINTF()用
 int __io_putchar(int ch)
 {
     APP_UsartTransmit_IT(USART1, (uint8_t *)&ch, 1);
     return ch;
 }
+
 int _write(int file, char *ptr, int len)
 {
     for (int i = 0; i < len; i++) {
@@ -107,11 +107,12 @@ int _write(int file, char *ptr, int len)
     }
     return len;
 }
+
 int fputc(int ch, FILE *f)
 {
     return __io_putchar(ch);
 }
-#endif
+#endif // DEBUG_PRINTF_USE
 
 static void APP_DmaConfig(void)
 {
@@ -701,17 +702,15 @@ int main(void)
 
     while (1)
     {
-#ifdef DEBUG_PRINTF_USE
-        printf("PY32F002A Develop By Chimipupu\r\n");
-        printf("HSI = %d MHz, PLL Freq = %d MHz\r\n", s_hsi_freq, s_pll_freq);
+        DBG_PRINTF("PY32F002A Develop By Chimipupu\r\n");
+        DBG_PRINTF("HSI = %d MHz, PLL Freq = %d MHz\r\n", s_hsi_freq, s_pll_freq);
 
         // 起動からの時間(秒単位)
-        printf("Execution Time : %d sec\r\n", s_lptim_cnt);
+        DBG_PRINTF("Execution Time : %d sec\r\n", s_lptim_cnt);
 
         // RTCの時刻表示
         APP_ShowRtcCalendar();
-        printf("%s\r\n", aShowTime);
-#endif
+        DBG_PRINTF("%s\r\n", aShowTime);
 
         // LPTIMチェック
         if(s_is_lptim_irq != false) {
@@ -755,7 +754,7 @@ void APP_ErrorHandler(void)
 void assert_failed(uint8_t *file, uint32_t line)
 {
     /* User can add his own implementation to report the file name and line number,
-        for example: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+        for example: DBG_PRINTF("Wrong parameters value: file %s on line %d\r\n", file, line) */
     /* infinite loop */
     while (1)
     {

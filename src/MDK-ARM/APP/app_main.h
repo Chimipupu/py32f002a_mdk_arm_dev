@@ -16,7 +16,14 @@
 #include <string.h>
 #include <stdbool.h>
 
+// (DEBUG)デバッグ用printf()
 // #define DEBUG_PRINTF_USE
+
+#ifdef DEBUG_PRINTF_USE
+#define DBG_PRINTF      printf
+#else
+#define DBG_PRINTF(...)  ((void)0)
+#endif
 
 #define UINT_8_MAX     255
 #define UINT_16_MAX    65535

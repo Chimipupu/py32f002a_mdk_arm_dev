@@ -116,7 +116,5 @@ void app_main(void)
     pi = MATH_PI;
 #endif
 
-#ifdef DEBUG_PRINTF_USE
-    printf("pi = %f\r\n", pi);
-#endif
+    DBG_PRINTF("pi = %f\r\n", pi);
 }
