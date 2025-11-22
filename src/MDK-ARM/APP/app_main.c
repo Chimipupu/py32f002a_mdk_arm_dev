@@ -9,6 +9,7 @@
  * 
  */
 #include "app_main.h"
+#include "i2c_s_reg.h"
 #include "state_machine.h"
 
 #ifdef CALC_MATH_PI
@@ -61,6 +62,9 @@ static void math_pi_print(void)
  */
 void app_main_init(void)
 {
+    // I2Cスレーブレジスタ初期化
+    i2c_s_reg_init();
+
     // ステートマシーン初期化
     sm_init();
 }
@@ -71,6 +75,6 @@ void app_main_init(void)
  */
 void app_main(void)
 {
-    // ステートマシーン初期化
+    // ステートマシーン メイン
     sm_main();
 }
