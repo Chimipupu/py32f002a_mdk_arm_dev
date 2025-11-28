@@ -10,6 +10,7 @@
  */
 
 #include "state_machine.h"
+#include "common.h"
 #include "i2c_s_reg.h"
 
 static e_state_machine s_state = SM_INIT;
@@ -49,7 +50,7 @@ void sm_main(void)
 
         // 処理実行状態
         case SM_EXEC:
-            __asm volatile("nop");
+            NOP();
             break;
 
         // エラー状態
