@@ -21,7 +21,6 @@
 // PUYA Lib
 #include "py32f0xx.h"
 
-
 // (DEBUG)デバッグ用printf()
 #define DEBUG_PRINTF_USE
 
@@ -73,5 +72,11 @@ __attribute__( ( always_inline ) ) static inline void _EI(void)
 {
     __asm__ __volatile__("cpsie i");
 }
+
+#define I2C_ADDRESS        0xA0     /* Local/Slave address */
+#define I2C_SPEEDCLOCK     100000   /* Communication speed 100K */
+#define I2C_STATE_READY    0        /* Ready state */
+#define I2C_STATE_BUSY_TX  1        /* Transmission state */
+#define I2C_STATE_BUSY_RX  2        /* Reception state */
 
 #endif // COMMON_H

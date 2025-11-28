@@ -12,13 +12,10 @@
 #include "i2c_s_reg.h"
 #include "common.h"
 
-static int8_t dmy_cbk(uint8_t addr, uint8_t val);
-
-// アクセスされているレジスタアドレス
-volatile static uint8_t s_proc_reg_addr = 0;
-
 // I2Cスレーブレジスタ 256個
 volatile uint8_t g_i2c_s_reg[256] = {0};
+
+static int8_t dmy_cbk(uint8_t addr, uint8_t val);
 
 // I2Cスレーブレジスタデータテーブル
 volatile const i2c_s_reg_tbl_data_t g_i2c_s_reg_data_tbl[256] = {

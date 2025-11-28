@@ -626,6 +626,11 @@
               <FilePath>.\APP\i2c_s_reg.c</FilePath>
             </File>
             <File>
+              <FileName>i2c_slave_handler.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\APP\i2c_slave_handler.c</FilePath>
+            </File>
+            <File>
               <FileName>py32f0xx_it.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\APP\py32f0xx_it.c</FilePath>

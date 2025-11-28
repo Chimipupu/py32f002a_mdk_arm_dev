@@ -41,7 +41,10 @@ extern void APP_LPTIMCallback(void);
 #include "py32f0xx_ll_dma.h"
 #include "py32f0xx_ll_gpio.h"
 #include "py32f0xx_ll_lptim.h"
+#include "py32f0xx_ll_i2c.h"
+#include "py32f0xx_ll_spi.h"
 #include "py32f0xx_ll_usart.h"
+#include "py32f0xx_ll_tim.h"
 #include "py32f0xx_ll_lptim.h"
 #include "py32f0xx_ll_rtc.h"
 
