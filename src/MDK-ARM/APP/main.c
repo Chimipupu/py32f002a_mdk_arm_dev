@@ -216,9 +216,9 @@ static void APP_SlaveReceive_IT(uint8_t *pData, uint16_t Size)
     LL_I2C_DisableBitPOS(I2C1);
 
     /* Assign the data to be sent and the data size to global variables */
-    p_i2c_slave_buf    = pData;
-    g_i2c_slave_cnt   = Size;
-    g_i2c_slave_state       = I2C_STATE_BUSY_RX;
+    p_i2c_slave_buf = pData;
+    g_i2c_slave_cnt = Size;
+    g_i2c_slave_state  = I2C_STATE_BUSY_RX;
 
     /* Enable acknowledge */
     LL_I2C_AcknowledgeNextData(I2C1, LL_I2C_ACK);

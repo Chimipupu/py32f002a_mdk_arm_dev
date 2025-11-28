@@ -12,6 +12,9 @@
 #include "i2c_s_reg.h"
 #include "common.h"
 
+// アクセスされているレジスタアドレス
+extern volatile uint8_t g_req_reg_addr;
+
 // I2Cスレーブレジスタ 256個
 volatile uint8_t g_i2c_s_reg[256] = {0};
 
