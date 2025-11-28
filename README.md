@@ -11,26 +11,21 @@
 > [!CAUTION]
 > ⚠️このF/Wは、PY32F002Aには未搭載のはずの機能の多くが動作している(※)<br>
 > ※[PY32F002AF15P6](https://www.py32.org/en/mcu/PY32F002Axx.html)🔗はシリコンがROM 32KB、RAM 4KBの[PY32F030](https://www.py32.org/en/mcu/PY32F030xx.html#introduction)🔗の可能性がある<br>
-> ➡️ **Flashは16KBのはずが32KB使用できる**<br>
-> ➡️ **SRAMは3KBのはずが4KBも用できる**<br>
-> ➡️ **未搭載のはずのPLLでHSI 24MHzを2逓倍して48MHzにできる**<br>
-> ➡️ **未搭載のはずのDMAで転送とIRQ割り込みができる**<br>
-> ➡️ **未搭載のはずのRTCでカウントとIRQ割り込みができる**<br>
 
 | 項目 | PUYA公表スペック<br>[PY32F002AF15P6](https://www.py32.org/en/mcu/PY32F002Axx.html)🔗 | 実際のスペック<br>[PY32F002AF15P6](https://www.py32.org/en/mcu/PY32F002Axx.html)🔗|
 | ---- | ---- | ---- |
 | CPU | ARM Cortex-M0+ | ARM Cortex-M0+ |
 | ROM | 20KB | **32KB** |
 | RAM | 3KB | **4KB** |
-| Clock | ・HSI 24MHz ※PLLは未搭載<br>・LSI 32KHz | **・HSI 48MHz ※PLLは2逓倍固定<br>・LSI 32.768KHz** |
+| Clock | @24MHzまで<br>・HSI ... 24MHz<br>・PLL ... (N/A)<br>・LSI ... 32KHz | **@48MHzまで**<br>・HSI ... 24MHz<br> **・PLL ... 2逓倍固定<br>・LSI ... 32.768KHz** |
 | GPIO | x18本 | x18本 |
 | DMA | なし | **x3本** |
-| タイマー | 16bit高機能タイマー TIM1<br> 16bit汎用タイマー TIM3<br>低電力タイマー LPTIM | 16bit高機能タイマー TIM1<br> 16bit汎用タイマー TIM3,**TIM14,TIM16,TIM17**<br>低電力タイマー LPTIM |
+| タイマー | タイマー x3本<br>・16bit高機能タイマー TIM1<br>・16bit汎用タイマー TIM3<br>・低電力タイマー LPTIM | タイマー x6本<br>・ 16bit高機能タイマー TIM1<br>・16bit汎用タイマー TIM3,**TIM14,TIM16,TIM17**<br>・低電力タイマー LPTIM |
 | RTC | (N/A) | **x1本** |
 | I2C | x1本 | x1本 |
 | SPI | x1本 | **x2本** |
 | UART | x1本 | **x2本** |
-| ADC | 12bit x12本 | 12bit x12本 |
+| ADC | 12bit x8本 | **12bit x10本** |
 | コンパレータ | x2本 | x2本 |
 
 ## 開発環境
