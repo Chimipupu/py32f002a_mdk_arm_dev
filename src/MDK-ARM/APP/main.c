@@ -9,13 +9,7 @@
  */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-
-#include <stdint.h>
-#include <string.h>
-#include <stdbool.h>
-
-#include "py32f0xx.h"
-
+#include "common.h"
 #include "app_main.h"
 
 /* Private define ------------------------------------------------------------*/

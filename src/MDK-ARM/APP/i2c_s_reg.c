@@ -10,6 +10,7 @@
  */
 
 #include "i2c_s_reg.h"
+#include "common.h"
 
 static int8_t dmy_cbk(uint8_t addr, uint8_t val);
 
