@@ -616,9 +616,9 @@
               <FilePath>.\APP\app_main.c</FilePath>
             </File>
             <File>
-              <FileName>state_machine.c</FileName>
+              <FileName>debug_test.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\APP\state_machine.c</FilePath>
+              <FilePath>.\APP\debug_test.c</FilePath>
             </File>
             <File>
               <FileName>i2c_s_reg.c</FileName>
@@ -629,6 +629,11 @@
               <FileName>i2c_slave_handler.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\APP\i2c_slave_handler.c</FilePath>
+            </File>
+            <File>
+              <FileName>state_machine.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\APP\state_machine.c</FilePath>
             </File>
             <File>
               <FileName>py32f0xx_it.c</FileName>

@@ -16,6 +16,15 @@
 #include <string.h>
 #include <stdbool.h>
 
+// --------------------------------
+// [コンパイル]
+
+// NOTE: UARTでのprintf()用　※ただこれはROMを7KBも食う大食い
+#define DEBUG_UART_USE
+
+// NOTE: テスト関連
+#define DEBUG_TEST
+// --------------------------------
 void app_main_init(void);
 void app_main(void);
 

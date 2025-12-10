@@ -765,6 +765,7 @@ int main(void)
     // DMA転送完了待ち
     // LL_mDelay(1);
 
+#if 0
     // DMA転送エラー確認
     if((s_dma_transfer_error_flg != false) || (s_dma_transfer_fail_flg != false)) {
         while (1)
@@ -773,6 +774,7 @@ int main(void)
             LL_mDelay(100);
         }
     }
+#endif
 
     // RTC初期化
     LL_RTC_TimeTypeDef rtc_time_config;

@@ -48,6 +48,9 @@ extern "C" {
 /* Exported macro ------------------------------------------------------------*/
 
 /* Exported functions prototypes ---------------------------------------------*/
+void usart1_get_cmd(uint8_t *buf, uint16_t buf_size);
+bool usart1_is_cmd_ready(void);
+
 void NMI_Handler(void);
 void HardFault_Handler(void);
 void SVC_Handler(void);
