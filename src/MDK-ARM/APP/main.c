@@ -60,10 +60,10 @@ uint32_t g_tim_cnt = 0;
 uint8_t aShowTime[50] = {0};
 
 bool g_is_rtc_alarm = false;
-
 static uint32_t s_lptim_cnt = 0;
 
 bool g_uart_rx_done_flg = false;
+bool g_uart_error_flg = false;
 /* Private function prototypes -----------------------------------------------*/
 static void APP_SystemClockConfig(void);
 static void APP_ConfigUsart(USART_TypeDef *USARTx);
@@ -579,7 +579,7 @@ void APP_UsartTransmit_IT(USART_TypeDef *USARTx, uint8_t *pData, uint16_t Size)
 
     // [バッファの衝突回避の待ち処理]
     // ※48MHz = 20.83ns, 待ち時間 = 20.83ns * 96 ≒ 2us
-    for(i = 0; i < 96; i++)
+    for(i = 0; i < 200; i++)
     {
         NOP();
     }
@@ -599,10 +599,10 @@ void APP_UsartReceive_IT(USART_TypeDef *USARTx, uint8_t *pData, uint16_t Size)
     g_rx_cnt = Size;
 
     /*Enable parity error interrupt*/
-    LL_USART_EnableIT_PE(USARTx);
+    // LL_USART_EnableIT_PE(USARTx);
 
     /*Enable error interrupt*/
-    LL_USART_EnableIT_ERROR(USARTx);
+    // LL_USART_EnableIT_ERROR(USARTx);
 
     /*Enable receive data register not empty interrupt*/
     LL_USART_EnableIT_RXNE(USARTx);
@@ -618,51 +618,55 @@ void APP_UsartIRQCallback(USART_TypeDef *USARTx)
     uint8_t tmp;
 
     /*Receive data register not empty*/
-    uint32_t errorflags = (LL_USART_IsActiveFlag_PE(USARTx) | LL_USART_IsActiveFlag_FE(USARTx) |\
-                        LL_USART_IsActiveFlag_ORE(USARTx) | LL_USART_IsActiveFlag_NE(USARTx));
-    if (errorflags == RESET)
+    // uint32_t errorflags = (LL_USART_IsActiveFlag_PE(USARTx) | \
+    //                     LL_USART_IsActiveFlag_FE(USARTx) | \
+    //                     LL_USART_IsActiveFlag_ORE(USARTx) | \
+    //                     LL_USART_IsActiveFlag_NE(USARTx)
+    //                     );
+
+    // 正常受信処理
+    // if (errorflags == RESET)
     {
         if ((LL_USART_IsActiveFlag_RXNE(USARTx) != RESET) && (LL_USART_IsEnabledIT_RXNE(USARTx) != RESET))
         {
             tmp = LL_USART_ReceiveData8(USARTx);
-            if ( ((tmp >= '0') && (tmp <= '9')) || // 数字か
+
+            // 改行コードかNULL文字なら受信終了
+            // if (tmp == '\r' || tmp == '\n' || tmp == '\0') {
+            if (tmp == '\r' || tmp == '\n') {
+                g_rx_cnt = 1; // 強制終了
+            }
+            else if ( ((tmp >= '0') && (tmp <= '9')) || // 数字か
                 ((tmp >= 'a') && (tmp <= 'z')) ||  // 小文字か
                 ((tmp >= 'A') && (tmp <= 'Z')) ||  // 大文字か
-                (tmp == '\r') ||                   // 改行コードか
                 (tmp == ' ') )
             {
                 *p_rx_buf = tmp;
                 p_rx_buf++;
+            } else {
+                // その他の文字は無視
             }
 
             if (--g_rx_cnt == 0U)
             {
                 g_uart_rx_done_flg = true;
                 LL_USART_DisableIT_RXNE(USARTx);
-                LL_USART_DisableIT_PE(USARTx);
-                LL_USART_DisableIT_ERROR(USARTx);
+                // LL_USART_DisableIT_PE(USARTx);
+                // LL_USART_DisableIT_ERROR(USARTx);
+                // LL_USART_DisableDirectionRx(USARTx);
             }
             return;
         }
     }
 
-    // /*Receive error occurred*/
-    // if (errorflags != RESET)
-    // {
-    //     /* Used for auto baud rate detection */
-    //     if ((LL_USART_IsActiveFlag_RXNE(USARTx) != RESET) && (LL_USART_IsEnabledIT_RXNE(USARTx) != RESET))
-    //     {
-    //         *p_rx_buf = LL_USART_ReceiveData8(USARTx);
-    //         p_rx_buf++;
-    //         if (--g_rx_cnt == 0U)
-    //         {
-    //             LL_USART_DisableIT_RXNE(USARTx);
-    //             LL_USART_DisableIT_PE(USARTx);
-    //             LL_USART_DisableIT_ERROR(USARTx);
-    //         }
-    //         return;
-    //     }
-    // }
+#if 0
+    // エラー受信処理
+    if (errorflags != RESET)
+    {
+        g_uart_error_flg = true;
+        return;
+    }
+#endif
 
     /*Transmit data register empty*/
     if ((LL_USART_IsActiveFlag_TXE(USARTx) != RESET) && (LL_USART_IsEnabledIT_TXE(USARTx) != RESET))

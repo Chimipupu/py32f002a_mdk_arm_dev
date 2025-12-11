@@ -33,6 +33,7 @@
 // --------------------------------
 extern uint32_t SystemCoreClock;
 extern bool g_uart_rx_done_flg;
+extern bool g_uart_error_flg;
 extern volatile uint16_t g_rx_cnt;
 
 #ifdef DEBUG_UART_USE
@@ -173,14 +174,14 @@ void app_main(void)
 
 #ifdef DEBUG_UART_USE
     // コマンド処理
-    if (s_is_req_rx_cmd != true) {
+    if((s_is_req_rx_cmd != true) || (g_uart_error_flg == true)) {
         memset(&s_cmd_buf[0], 0, sizeof(s_cmd_buf));
         APP_UsartReceive_IT(USART1, &s_cmd_buf[0], sizeof(s_cmd_buf));
         s_is_req_rx_cmd = true;
+        g_uart_error_flg = false;
     }
 
-    if((g_uart_rx_done_flg == true) ||
-        ((g_rx_cnt == 0) && (s_is_req_rx_cmd != false)))
+    if(g_uart_rx_done_flg == true)
     {
         dbg_cmd_exec(s_cmd_buf);
         s_is_req_rx_cmd = false;
