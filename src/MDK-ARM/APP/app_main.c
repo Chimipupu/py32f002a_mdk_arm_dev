@@ -147,10 +147,10 @@ static void dbg_cmd_exec(uint8_t *p_buf)
 void app_main_init(void)
 {
     // I2Cスレーブレジスタ初期化
-    i2c_s_reg_init();
+    // i2c_s_reg_init();
 
     // ステートマシーン初期化
-    sm_init();
+    // sm_init();
 
 #ifdef DEBUG_TEST
     dbg_test_init();
@@ -172,10 +172,12 @@ void app_main(void)
     if(g_uart_rx_done_flg == true)
     {
         dbg_cmd_exec((uint8_t *)&g_uart_rx_buf[0]);
+        memset((uint8_t *)&g_uart_rx_buf[0], 0x00, UART_BUF_SIZE);
+        g_idx_uart_rx_buf = 0;
         g_uart_rx_done_flg = false;
     }
 #endif // DEBUG_UART_USE
 
     // ステートマシーン メイン
-    sm_main();
+    // sm_main();
 }

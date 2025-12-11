@@ -148,22 +148,29 @@
           <Name></Name>
         </SetRegEntry>
       </TargetDriverDllRegistry>
-      <Breakpoint/>
+      <Breakpoint>
+        <Bp>
+          <Number>0</Number>
+          <Type>0</Type>
+          <LineNumber>586</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>134220270</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>1</BreakIfRCount>
+          <Filename>.\APP\main.c</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression>\\py32f002a_dev\APP/main.c\586</Expression>
+        </Bp>
+      </Breakpoint>
       <WatchWindow1>
         <Ww>
           <count>0</count>
           <WinNumber>1</WinNumber>
-          <ItemText>g_uart_rx_done_flg</ItemText>
-        </Ww>
-        <Ww>
-          <count>1</count>
-          <WinNumber>1</WinNumber>
-          <ItemText>g_rx_cnt</ItemText>
-        </Ww>
-        <Ww>
-          <count>2</count>
-          <WinNumber>1</WinNumber>
-          <ItemText>s_cmd_buf</ItemText>
+          <ItemText>g_uart_rx_buf</ItemText>
         </Ww>
       </WatchWindow1>
       <Tracepoint>

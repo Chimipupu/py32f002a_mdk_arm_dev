@@ -24,6 +24,8 @@
 // (DEBUG)デバッグ用printf()
 #define DEBUG_PRINTF_USE
 
+#define UART_BUF_SIZE  128
+
 #define UINT_8_MAX     255
 #define UINT_16_MAX    65535
 #define UINT_32_MAX    0xffffffffU  /* 4294967295U */

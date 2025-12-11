@@ -55,7 +55,6 @@ uint8_t aShowTime[50] = {0};
 
 bool g_is_rtc_alarm = false;
 
-#define UART_BUF_SIZE    128
 // volatile uint8_t g_uart_tx_buf[UART_BUF_SIZE] = {0};
 // volatile uint32_t g_idx_uart_tx_buf = 0;
 volatile uint8_t g_uart_rx_buf[UART_BUF_SIZE] = {0};
@@ -526,6 +525,7 @@ static void APP_ConfigUsart(USART_TypeDef *USARTx)
 
     /*Set USART1 interrupt priority*/
     NVIC_SetPriority(USART1_IRQn,0);
+
     /*Enable USART1 interrupt*/
     NVIC_EnableIRQ(USART1_IRQn);
 
@@ -548,15 +548,16 @@ static void APP_ConfigUsart(USART_TypeDef *USARTx)
     /* Configure as full duplex asynchronous mode */
     LL_USART_ConfigAsyncMode(USARTx);
 
-    /* Enable UART module */
-    LL_USART_Enable(USARTx);
+    // 割り込み有効化
+    LL_USART_EnableIT_RXNE(USARTx);
+    // LL_USART_EnableIT_TXE(USARTx);
+
     /* Configure auto baud rate detection */
     // LL_USART_SetAutoBaudRateMode(USARTx, LL_USART_AUTOBAUDRATE_ONFALLINGEDGE);
     // LL_USART_EnableAutoBaudRate(USARTx);
 
-    // 割り込み有効化
-    LL_USART_EnableIT_RXNE(USARTx);
-    // LL_USART_EnableIT_TXE(USARTx);
+    /* Enable UART module */
+    LL_USART_Enable(USARTx);
 }
 
 /**
@@ -680,15 +681,16 @@ int main(void)
     s_hsi_freq = LL_RCC_HSI_GetFreq() / 1000000;
     s_pll_freq = s_hsi_freq * 2;
 
+    // UART初期化
+    APP_ConfigUsart(USART1);
+
+#if 0
     // I2C初期化
     APP_ConfigI2cSlave();
 
     // LPTIM初期化
     APP_LPTIMClockconf();
     APP_ConfigLPTIMOneShot();
-
-    // UART初期化
-    APP_ConfigUsart(USART1);
 
     // DMA初期化
     memset(aDST_Buffer, 0x00, sizeof(aDST_Buffer));
@@ -711,6 +713,7 @@ int main(void)
     rtc_alarm_config.AlarmTime.Minutes    = 3;
     rtc_alarm_config.AlarmTime.Seconds    = 0;
     APP_ConfigRtcAlarm(&rtc_alarm_config);
+#endif
 
     // アプリ初期化
     app_main_init();
@@ -718,15 +721,18 @@ int main(void)
     DBG_UART_PRINTF("PY32F002A Develop By Chimipupu\r\n");
     DBG_UART_PRINTF("HSI = %d MHz, PLL Freq = %d MHz\r\n", s_hsi_freq, s_pll_freq);
 
+#if 0
     // 起動からの時間(秒単位)
     DBG_UART_PRINTF("Execution Time : %d sec\r\n", s_lptim_cnt);
 
     // RTCの時刻表示
     APP_ShowRtcCalendar();
     DBG_UART_PRINTF("%s\r\n", aShowTime);
+#endif
 
     while (1)
     {
+#if 0
         // LPTIMチェック
         if(s_is_lptim_irq != false) {
             s_is_lptim_irq = false;
@@ -736,7 +742,7 @@ int main(void)
         if(g_is_rtc_alarm != false) {
             g_is_rtc_alarm = false;
         }
-
+#endif
         // アプリメイン
         app_main();
     }
