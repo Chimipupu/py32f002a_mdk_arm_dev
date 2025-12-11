@@ -17,7 +17,8 @@
 
 // --------------------------------
 // [コンパイルスイッチ]
-
+// NOTE: テスト関連
+// #define DEBUG_TEST
 // --------------------------------
 void dbg_test_init(void);
 void dbg_test_main(void);

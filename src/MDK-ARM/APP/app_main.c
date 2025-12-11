@@ -44,12 +44,14 @@ typedef struct {
 } dbg_cmd_t;
 
 static void cmd_help(uint8_t *p_arg);
+static void cmd_rst(uint8_t *p_arg);
 static void cmd_cls(uint8_t *p_arg);
 static void cmd_dbg(uint8_t *p_arg);
 static void cmd_reg(uint8_t *p_arg);
 
 const dbg_cmd_t g_dbg_cmd_tbl[] = {
     { "help", cmd_help },
+    { "rst",  cmd_rst},
     { "cls",  cmd_cls },
     { "dbg",  cmd_dbg },
     { "reg",  cmd_reg },
@@ -73,6 +75,12 @@ static void cmd_help(uint8_t *p_arg)
     {
         DBG_UART_PRINTF("No.%d: %s\r\n", i, g_dbg_cmd_tbl[i].p_cmd_str);
     }
+}
+
+static void cmd_rst(uint8_t *p_arg)
+{
+    DBG_UART_PRINTF("[DEBUG] System Reset\r\n");
+    NVIC_SystemReset();
 }
 
 static void cmd_cls(uint8_t *p_arg)

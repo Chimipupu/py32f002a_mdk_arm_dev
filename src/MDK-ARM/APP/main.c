@@ -587,24 +587,6 @@ void APP_UsartIRQCallback(USART_TypeDef *USARTx)
             // その他の文字は無視
         }
     }
-
-#if 0
-    if ((LL_USART_IsActiveFlag_TXE(USARTx) != RESET) && (LL_USART_IsEnabledIT_TXE(USARTx) != RESET))
-    {
-        tmp = g_uart_tx_buf[g_idx_uart_tx_buf];
-        g_idx_uart_tx_buf = (g_idx_uart_tx_buf + 1) % UART_BUF_SIZE;
-        LL_USART_TransmitData8(USARTx, tmp);
-        // if (tmp == '\0')
-        // {
-        //     LL_USART_EnableIT_TC(USARTx);
-        // }
-    }
-
-    if ((LL_USART_IsActiveFlag_TC(USARTx) != RESET) && (LL_USART_IsEnabledIT_TC(USARTx) != RESET))
-    {
-        LL_USART_DisableIT_TC(USARTx);
-    }
-#endif
 }
 
 /**
