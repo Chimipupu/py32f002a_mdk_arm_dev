@@ -21,6 +21,7 @@
 // #include "py32f0xx_ll_dma.h"
 
 // My App
+#include "main.h"
 #include "common.h"
 #include "app_main.h"
 
@@ -81,13 +82,13 @@ static void calc_pi_spigot(void)
 
         int val = c + d / 10000;
         if (k == 0) {
-            DBG_PRINTF("%d.%03d", val / 1000, val % 1000);
+            DBG_UART_PRINTF("%d.%03d", val / 1000, val % 1000);
         } else {
-            DBG_PRINTF("%04d", val);
+            DBG_UART_PRINTF("%04d", val);
         }
         c = d % 10000;
     }
-    DBG_PRINTF("...\r\n");
+    DBG_UART_PRINTF("...\r\n");
 }
 
 static int8_t math_test(void)
@@ -111,9 +112,9 @@ void dbg_test_main(void)
 
     if (is_test_end != true) {
         if (g_dbg_test_tbl[s_test].p_test_name != NULL) {
-            DBG_PRINTF("[DEBUG] %s Test: Start\r\n", g_dbg_test_tbl[s_test].p_test_name);
+            DBG_UART_PRINTF("[DEBUG] %s Test: Start\r\n", g_dbg_test_tbl[s_test].p_test_name);
             ret = g_dbg_test_tbl[s_test].p_test_func();
-            DBG_PRINTF("[DEBUG] Test Result: %s\r\n", (ret == TEST_OK) ? "OK" : "NG");
+            DBG_UART_PRINTF("[DEBUG] Test Result: %s\r\n", (ret == TEST_OK) ? "OK" : "NG");
             s_test++;
         } else {
             is_test_end = true;

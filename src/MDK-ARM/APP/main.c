@@ -12,10 +12,15 @@
 #include "common.h"
 #include "app_main.h"
 
+#include <stdio.h>
+#include <stdint.h>
+#include <string.h>
+#include <stdbool.h>
+#include <stdarg.h>
+
 /* Private define ------------------------------------------------------------*/
 #define LPTIM_CLOCK_SRC_LSI
 #define RTC_ASYNCH_PREDIV        ((uint32_t)0x7FFF)
-#define UART_BUF_SIZE            256
 
 /* Private variables ---------------------------------------------------------*/
 const uint8_t g_lptim_irq_str[]  = "LPTIM IRQ!\r\n";
@@ -27,17 +32,6 @@ const uint8_t g_end_of_month[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 
 volatile uint8_t *p_i2c_slave_buf = NULL;
 volatile uint16_t g_i2c_slave_cnt = 0;
 volatile uint32_t g_i2c_slave_state = I2C_STATE_READY;
-
-// uint8_t g_tx_buf[UART_BUF_SIZE] = {0};
-// uint8_t g_rx_buf[UART_BUF_SIZE] = {0};
-
-uint8_t *p_tx_buf = NULL;
-volatile uint16_t g_tx_size = 0;
-volatile uint16_t g_tx_cnt = 0;
-
-uint8_t *p_rx_buf = NULL;
-volatile uint16_t g_rx_size = 0;
-volatile uint16_t g_rx_cnt = 0;
 
 extern uint32_t SystemCoreClock;
 
@@ -60,10 +54,28 @@ uint32_t g_tim_cnt = 0;
 uint8_t aShowTime[50] = {0};
 
 bool g_is_rtc_alarm = false;
-static uint32_t s_lptim_cnt = 0;
 
-bool g_uart_rx_done_flg = false;
-bool g_uart_error_flg = false;
+#define UART_BUF_SIZE    128
+// volatile uint8_t g_uart_tx_buf[UART_BUF_SIZE] = {0};
+// volatile uint32_t g_idx_uart_tx_buf = 0;
+volatile uint8_t g_uart_rx_buf[UART_BUF_SIZE] = {0};
+volatile uint32_t g_idx_uart_rx_buf = 0;
+volatile bool g_uart_rx_done_flg = false;
+
+#define BUFFER_SIZE       32
+LL_UTILS_ClkInitTypeDef UTILS_ClkInitStruct = {LL_RCC_SYSCLK_DIV_1, LL_RCC_APB1_DIV_1};
+uint8_t aDST_Buffer[BUFFER_SIZE];
+
+volatile static bool s_dma_transfer_complete_flg = false;
+volatile static bool s_dma_transfer_error_flg = false;
+volatile static bool s_dma_transfer_fail_flg = false;
+
+volatile static uint32_t s_lptim_cnt = 0;
+volatile static bool s_is_lptim_irq = false;
+
+volatile static uint8_t s_hsi_freq = 0;
+volatile static uint8_t s_pll_freq = 0;
+
 /* Private function prototypes -----------------------------------------------*/
 static void APP_SystemClockConfig(void);
 static void APP_ConfigUsart(USART_TypeDef *USARTx);
@@ -80,41 +92,24 @@ static void APP_ShowRtcCalendar(void);
 static void APP_UpadateRtcTimeStruct(void);
 static void APP_UpadateRtcDateStruct(void);
 
-#define BUFFER_SIZE              32
-
-LL_UTILS_ClkInitTypeDef UTILS_ClkInitStruct = {LL_RCC_SYSCLK_DIV_1, LL_RCC_APB1_DIV_1};
-uint8_t aDST_Buffer[BUFFER_SIZE];
-
-volatile static bool s_dma_transfer_complete_flg = false;
-volatile static bool s_dma_transfer_error_flg = false;
-volatile static bool s_dma_transfer_fail_flg = false;
-
-volatile static bool s_is_lptim_irq = false;
-
-volatile static uint8_t s_hsi_freq = 0;
-volatile static uint8_t s_pll_freq = 0;
-
+void DBG_UART_PRINTF(const char *format, ...)
+{
 #ifdef DEBUG_PRINTF_USE
-// DBG_PRINTF()用
-int __io_putchar(int ch)
-{
-    APP_UsartTransmit_IT(USART1, (uint8_t *)&ch, 1);
-    return ch;
-}
+    char buffer[256];
+    va_list args;
+    int len;
 
-int _write(int file, char *ptr, int len)
-{
-    for (int i = 0; i < len; i++) {
-        __io_putchar(ptr[i]);
+    va_start(args, format);
+    len = vsnprintf(buffer, sizeof(buffer), format, args);
+    va_end(args);
+
+    for (int i = 0; i < len && i < sizeof(buffer); i++)
+    {
+        while (!LL_USART_IsActiveFlag_TXE(USART1));
+        LL_USART_TransmitData8(USART1, (uint8_t)buffer[i]);
     }
-    return len;
-}
-
-int fputc(int ch, FILE *f)
-{
-    return __io_putchar(ch);
-}
 #endif // DEBUG_PRINTF_USE
+}
 
 static void APP_DmaConfig(void)
 {
@@ -556,56 +551,12 @@ static void APP_ConfigUsart(USART_TypeDef *USARTx)
     /* Enable UART module */
     LL_USART_Enable(USARTx);
     /* Configure auto baud rate detection */
-    LL_USART_SetAutoBaudRateMode(USARTx, LL_USART_AUTOBAUDRATE_ONFALLINGEDGE);
-    LL_USART_EnableAutoBaudRate(USARTx);
-}
+    // LL_USART_SetAutoBaudRateMode(USARTx, LL_USART_AUTOBAUDRATE_ONFALLINGEDGE);
+    // LL_USART_EnableAutoBaudRate(USARTx);
 
-/**
-  * @brief  USART transmit function.
-  * @param  USARTx：USART module, can be USART1
-  * @param  pData：transmit buffer
-  * @param  Size：Size of the transmit buffer
-  * @retval None
-  */
-void APP_UsartTransmit_IT(USART_TypeDef *USARTx, uint8_t *pData, uint16_t Size)
-{
-    volatile uint8_t i;
-
-    p_tx_buf = pData;
-    g_tx_size = Size;
-    g_tx_cnt = Size;
-
-    LL_USART_EnableIT_TXE(USARTx);
-
-    // [バッファの衝突回避の待ち処理]
-    // ※48MHz = 20.83ns, 待ち時間 = 20.83ns * 96 ≒ 2us
-    for(i = 0; i < 200; i++)
-    {
-        NOP();
-    }
-}
-
-/**
-  * @brief  USART receive function.
-  * @param  USARTx：USART module, can be USART1
-  * @param  pData：transmit buffer
-  * @param  Size：Size of the transmit buffer
-  * @retval None
-  */
-void APP_UsartReceive_IT(USART_TypeDef *USARTx, uint8_t *pData, uint16_t Size)
-{
-    p_rx_buf = pData;
-    g_rx_size = Size;
-    g_rx_cnt = Size;
-
-    /*Enable parity error interrupt*/
-    // LL_USART_EnableIT_PE(USARTx);
-
-    /*Enable error interrupt*/
-    // LL_USART_EnableIT_ERROR(USARTx);
-
-    /*Enable receive data register not empty interrupt*/
+    // 割り込み有効化
     LL_USART_EnableIT_RXNE(USARTx);
+    // LL_USART_EnableIT_TXE(USARTx);
 }
 
 /**
@@ -617,76 +568,42 @@ void APP_UsartIRQCallback(USART_TypeDef *USARTx)
 {
     uint8_t tmp;
 
-    /*Receive data register not empty*/
-    // uint32_t errorflags = (LL_USART_IsActiveFlag_PE(USARTx) | \
-    //                     LL_USART_IsActiveFlag_FE(USARTx) | \
-    //                     LL_USART_IsActiveFlag_ORE(USARTx) | \
-    //                     LL_USART_IsActiveFlag_NE(USARTx)
-    //                     );
-
-    // 正常受信処理
-    // if (errorflags == RESET)
+    if ((LL_USART_IsActiveFlag_RXNE(USARTx) != RESET) && (LL_USART_IsEnabledIT_RXNE(USARTx) != RESET))
     {
-        if ((LL_USART_IsActiveFlag_RXNE(USARTx) != RESET) && (LL_USART_IsEnabledIT_RXNE(USARTx) != RESET))
+        tmp = LL_USART_ReceiveData8(USARTx);
+
+        if ( ((tmp >= '0') && (tmp <= '9')) || // 数字か
+            ((tmp >= 'a') && (tmp <= 'z')) ||  // 小文字か
+            ((tmp >= 'A') && (tmp <= 'Z')) ||  // 大文字か
+            (tmp == ' ') )
         {
-            tmp = LL_USART_ReceiveData8(USARTx);
-
-            // 改行コードかNULL文字なら受信終了
-            // if (tmp == '\r' || tmp == '\n' || tmp == '\0') {
-            if (tmp == '\r' || tmp == '\n') {
-                g_rx_cnt = 1; // 強制終了
-            }
-            else if ( ((tmp >= '0') && (tmp <= '9')) || // 数字か
-                ((tmp >= 'a') && (tmp <= 'z')) ||  // 小文字か
-                ((tmp >= 'A') && (tmp <= 'Z')) ||  // 大文字か
-                (tmp == ' ') )
-            {
-                *p_rx_buf = tmp;
-                p_rx_buf++;
-            } else {
-                // その他の文字は無視
-            }
-
-            if (--g_rx_cnt == 0U)
-            {
-                g_uart_rx_done_flg = true;
-                LL_USART_DisableIT_RXNE(USARTx);
-                // LL_USART_DisableIT_PE(USARTx);
-                // LL_USART_DisableIT_ERROR(USARTx);
-                // LL_USART_DisableDirectionRx(USARTx);
-            }
-            return;
+            g_uart_rx_buf[g_idx_uart_rx_buf]= tmp;
+            g_idx_uart_rx_buf = (g_idx_uart_rx_buf + 1) % UART_BUF_SIZE;
+        }
+        else if (tmp == '\r' || tmp == '\n' || tmp == '\0') {
+            g_uart_rx_done_flg = true;
+        } else {
+            // その他の文字は無視
         }
     }
 
 #if 0
-    // エラー受信処理
-    if (errorflags != RESET)
-    {
-        g_uart_error_flg = true;
-        return;
-    }
-#endif
-
-    /*Transmit data register empty*/
     if ((LL_USART_IsActiveFlag_TXE(USARTx) != RESET) && (LL_USART_IsEnabledIT_TXE(USARTx) != RESET))
     {
-        LL_USART_TransmitData8(USARTx, *p_tx_buf);
-        p_tx_buf++;
-        if (--g_tx_cnt == 0U)
-        {
-            LL_USART_DisableIT_TXE(USARTx);
-            LL_USART_EnableIT_TC(USARTx);
-        }
-        return;
+        tmp = g_uart_tx_buf[g_idx_uart_tx_buf];
+        g_idx_uart_tx_buf = (g_idx_uart_tx_buf + 1) % UART_BUF_SIZE;
+        LL_USART_TransmitData8(USARTx, tmp);
+        // if (tmp == '\0')
+        // {
+        //     LL_USART_EnableIT_TC(USARTx);
+        // }
     }
 
-    /*Transmission complete*/
     if ((LL_USART_IsActiveFlag_TC(USARTx) != RESET) && (LL_USART_IsEnabledIT_TC(USARTx) != RESET))
     {
         LL_USART_DisableIT_TC(USARTx);
-        return;
     }
+#endif
 }
 
 /**
@@ -771,8 +688,6 @@ int main(void)
     APP_ConfigLPTIMOneShot();
 
     // UART初期化
-    // memset(g_rx_buf, 0x00, sizeof(g_rx_buf));
-    // memset(g_tx_buf, 0x00, sizeof(g_tx_buf));
     APP_ConfigUsart(USART1);
 
     // DMA初期化
@@ -800,15 +715,15 @@ int main(void)
     // アプリ初期化
     app_main_init();
 
-    DBG_PRINTF("PY32F002A Develop By Chimipupu\r\n");
-    DBG_PRINTF("HSI = %d MHz, PLL Freq = %d MHz\r\n", s_hsi_freq, s_pll_freq);
+    DBG_UART_PRINTF("PY32F002A Develop By Chimipupu\r\n");
+    DBG_UART_PRINTF("HSI = %d MHz, PLL Freq = %d MHz\r\n", s_hsi_freq, s_pll_freq);
 
     // 起動からの時間(秒単位)
-    DBG_PRINTF("Execution Time : %d sec\r\n", s_lptim_cnt);
+    DBG_UART_PRINTF("Execution Time : %d sec\r\n", s_lptim_cnt);
 
     // RTCの時刻表示
     APP_ShowRtcCalendar();
-    DBG_PRINTF("%s\r\n", aShowTime);
+    DBG_UART_PRINTF("%s\r\n", aShowTime);
 
     while (1)
     {
@@ -852,7 +767,7 @@ void APP_ErrorHandler(void)
 void assert_failed(uint8_t *file, uint32_t line)
 {
     /* User can add his own implementation to report the file name and line number,
-        for example: DBG_PRINTF("Wrong parameters value: file %s on line %d\r\n", file, line) */
+        for example: DBG_UART_PRINTF("Wrong parameters value: file %s on line %d\r\n", file, line) */
     /* infinite loop */
     while (1)
     {

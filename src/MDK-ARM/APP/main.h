@@ -57,8 +57,7 @@ extern void APP_LPTIMCallback(void);
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions prototypes ---------------------------------------------*/
-void APP_UsartTransmit_IT(USART_TypeDef *USARTx, uint8_t *pData, uint16_t Size);
-void APP_UsartReceive_IT(USART_TypeDef *USARTx, uint8_t *pData, uint16_t Size);
+void DBG_UART_PRINTF(const char *format, ...);
 void APP_ErrorHandler(void);
 void APP_UsartIRQCallback(USART_TypeDef *USARTx);
 /* Private defines -----------------------------------------------------------*/

@@ -33,12 +33,11 @@
 // --------------------------------
 extern uint32_t SystemCoreClock;
 extern bool g_uart_rx_done_flg;
-extern bool g_uart_error_flg;
-extern volatile uint16_t g_rx_cnt;
+extern volatile uint8_t g_uart_rx_buf[];
+extern volatile uint32_t g_idx_uart_rx_buf;
 
 #ifdef DEBUG_UART_USE
 typedef void (*p_cbk)(uint8_t *p_arg);
-
 typedef struct {
     char *p_cmd_str;
     p_cbk p_callback;
@@ -55,9 +54,7 @@ const dbg_cmd_t g_dbg_cmd_tbl[] = {
     { "dbg",  cmd_dbg },
     { "reg",  cmd_reg },
 };
-
 const uint8_t g_dbg_cmd_tbl_size = sizeof(g_dbg_cmd_tbl) / sizeof(dbg_cmd_t);
-static uint8_t s_cmd_buf[16] = {0};
 
 static void dbg_cmd_exec(uint8_t *p_buf);
 // --------------------------------
@@ -65,34 +62,34 @@ static void cmd_help(uint8_t *p_arg)
 {
     uint8_t i;
 
-    DBG_PRINTF("PY32F002A Develop F/W Ver 0.1\r\n");
-    DBG_PRINTF("Chimipupu(https://github.com/Chimipupu)\r\n");
-    DBG_PRINTF("Copyright (c) 2025 Chimipupu All Rights Reserved.\r\n");
-    DBG_PRINTF("[DEBUG] Clock: %d MHz\r\n", SystemCoreClock / 1000000);
-    DBG_PRINTF("[DEBUG] Flash: 16(32) KB, SRAM: 3(4) KB\r\n");
-    DBG_PRINTF("Available Commands: %d\r\n", g_dbg_cmd_tbl_size);
+    DBG_UART_PRINTF("PY32F002A Develop F/W Ver 0.1\r\n");
+    DBG_UART_PRINTF("Chimipupu(https://github.com/Chimipupu)\r\n");
+    DBG_UART_PRINTF("Copyright (c) 2025 Chimipupu All Rights Reserved.\r\n");
+    DBG_UART_PRINTF("[DEBUG] Clock: %d MHz\r\n", SystemCoreClock / 1000000);
+    DBG_UART_PRINTF("[DEBUG] Flash: 16(32) KB, SRAM: 3(4) KB\r\n");
+    DBG_UART_PRINTF("Available Commands: %d\r\n", g_dbg_cmd_tbl_size);
 
     for(i = 0; i < g_dbg_cmd_tbl_size; i++)
     {
-        DBG_PRINTF("No.%d: %s\r\n", i, g_dbg_cmd_tbl[i].p_cmd_str);
+        DBG_UART_PRINTF("No.%d: %s\r\n", i, g_dbg_cmd_tbl[i].p_cmd_str);
     }
 }
 
 static void cmd_cls(uint8_t *p_arg)
 {
     // ANSIエスケープシーケンスで画面クリア
-    DBG_PRINTF("\033[2J\033[H");
+    DBG_UART_PRINTF("\033[2J\033[H");
 }
 
 static void cmd_dbg(uint8_t *p_arg)
 {
-    DBG_PRINTF("[DEBUG] DBG Command\r\n");
+    DBG_UART_PRINTF("[DEBUG] DBG Command\r\n");
     // TODO:
 }
 
 static void cmd_reg(uint8_t *p_arg)
 {
-    DBG_PRINTF("[DEBUG] REG Command\r\n");
+    DBG_UART_PRINTF("[DEBUG] REG Command\r\n");
     // TODO:
 }
 
@@ -125,8 +122,8 @@ static void dbg_cmd_exec(uint8_t *p_buf)
     {
         if (strcmp(p_cmd, (char *)g_dbg_cmd_tbl[i].p_cmd_str) == 0)
         {
-            // DBG_PRINTF("[DEBUG] cmd: %s\r\n", p_cmd);
-            // DBG_PRINTF("[DEBUG] arg: %s\r\n", p_arg ? p_arg : "None");
+            // DBG_UART_PRINTF("[DEBUG] cmd: %s\r\n", p_cmd);
+            // DBG_UART_PRINTF("[DEBUG] arg: %s\r\n", p_arg ? p_arg : "None");
 
             // コマンド実行
             if(p_arg == NULL) {
@@ -134,7 +131,7 @@ static void dbg_cmd_exec(uint8_t *p_buf)
             } else {
                 g_dbg_cmd_tbl[i].p_callback((uint8_t *)p_arg);
             }
-            DBG_PRINTF("\n> ");
+            DBG_UART_PRINTF("\n> ");
             break;
         }
     }
@@ -166,25 +163,15 @@ void app_main_init(void)
  */
 void app_main(void)
 {
-    static bool s_is_req_rx_cmd = false;
-
 #ifdef DEBUG_TEST
     dbg_test_main();
 #endif // DEBUG_TEST
 
 #ifdef DEBUG_UART_USE
     // コマンド処理
-    if((s_is_req_rx_cmd != true) || (g_uart_error_flg == true)) {
-        memset(&s_cmd_buf[0], 0, sizeof(s_cmd_buf));
-        APP_UsartReceive_IT(USART1, &s_cmd_buf[0], sizeof(s_cmd_buf));
-        s_is_req_rx_cmd = true;
-        g_uart_error_flg = false;
-    }
-
     if(g_uart_rx_done_flg == true)
     {
-        dbg_cmd_exec(s_cmd_buf);
-        s_is_req_rx_cmd = false;
+        dbg_cmd_exec((uint8_t *)&g_uart_rx_buf[0]);
         g_uart_rx_done_flg = false;
     }
 #endif // DEBUG_UART_USE
