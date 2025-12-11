@@ -57,6 +57,7 @@ const dbg_cmd_t g_dbg_cmd_tbl[] = {
     { "reg",  cmd_reg },
 };
 const uint8_t g_dbg_cmd_tbl_size = sizeof(g_dbg_cmd_tbl) / sizeof(dbg_cmd_t);
+const uint8_t g_pw_tbl[] = {0x21, 0x50, 0x57, 0x3F};
 
 static void dbg_cmd_exec(uint8_t *p_buf);
 // --------------------------------
@@ -171,6 +172,8 @@ void app_main_init(void)
  */
 void app_main(void)
 {
+    static bool s_pw_auth_flg = false;
+
 #ifdef DEBUG_TEST
     dbg_test_main();
 #endif // DEBUG_TEST
@@ -179,10 +182,28 @@ void app_main(void)
     // コマンド処理
     if(g_uart_rx_done_flg == true)
     {
-        dbg_cmd_exec((uint8_t *)&g_uart_rx_buf[0]);
-        memset((uint8_t *)&g_uart_rx_buf[0], 0x00, UART_BUF_SIZE);
-        g_idx_uart_rx_buf = 0;
-        g_uart_rx_done_flg = false;
+        // password認証チェック
+        if(s_pw_auth_flg == false)
+        {
+            if (strncmp((char *)&g_uart_rx_buf[0], (char *)g_pw_tbl, sizeof(g_pw_tbl)) == 0)
+            {
+                s_pw_auth_flg = true;
+                DBG_UART_PRINTF("[DEBUG] Password Auth Success!\r\n");
+                DBG_UART_PRINTF("\n> ");
+            }
+            else
+            {
+                memset((uint8_t *)&g_uart_rx_buf[0], 0x00, UART_BUF_SIZE);
+                g_idx_uart_rx_buf = 0;
+                g_uart_rx_done_flg = false;
+                return;
+            }
+        } else {
+            dbg_cmd_exec((uint8_t *)&g_uart_rx_buf[0]);
+            memset((uint8_t *)&g_uart_rx_buf[0], 0x00, UART_BUF_SIZE);
+            g_idx_uart_rx_buf = 0;
+            g_uart_rx_done_flg = false;
+        }
     }
 #endif // DEBUG_UART_USE
 

@@ -576,7 +576,8 @@ void APP_UsartIRQCallback(USART_TypeDef *USARTx)
         if ( ((tmp >= '0') && (tmp <= '9')) || // 数字か
             ((tmp >= 'a') && (tmp <= 'z')) ||  // 小文字か
             ((tmp >= 'A') && (tmp <= 'Z')) ||  // 大文字か
-            (tmp == ' ') )
+            (tmp == ' ') || (tmp == '!') || (tmp == '?') || (tmp == '#')
+            )
         {
             g_uart_rx_buf[g_idx_uart_rx_buf]= tmp;
             g_idx_uart_rx_buf = (g_idx_uart_rx_buf + 1) % UART_BUF_SIZE;
