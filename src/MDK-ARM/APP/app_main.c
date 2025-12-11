@@ -24,6 +24,7 @@
 #include "py32f0xx_it.h"
 
 // My App
+#include "main.h"
 #include "common.h"
 #include "i2c_s_reg.h"
 #include "state_machine.h"
@@ -31,6 +32,8 @@
 
 // --------------------------------
 extern uint32_t SystemCoreClock;
+extern bool g_uart_rx_done_flg;
+extern volatile uint16_t g_rx_cnt;
 
 #ifdef DEBUG_UART_USE
 typedef void (*p_cbk)(uint8_t *p_arg);
@@ -53,8 +56,7 @@ const dbg_cmd_t g_dbg_cmd_tbl[] = {
 };
 
 const uint8_t g_dbg_cmd_tbl_size = sizeof(g_dbg_cmd_tbl) / sizeof(dbg_cmd_t);
-
-uint8_t s_cmd_buf[256];
+static uint8_t s_cmd_buf[16] = {0};
 
 static void dbg_cmd_exec(uint8_t *p_buf);
 // --------------------------------
@@ -131,10 +133,10 @@ static void dbg_cmd_exec(uint8_t *p_buf)
             } else {
                 g_dbg_cmd_tbl[i].p_callback((uint8_t *)p_arg);
             }
+            DBG_PRINTF("\n> ");
             break;
         }
     }
-    DBG_PRINTF("\n> ");
 }
 #endif // DEBUG_UART_USE
 
@@ -163,18 +165,26 @@ void app_main_init(void)
  */
 void app_main(void)
 {
-    // DBG_PRINTF("App Main\r\n");
+    static bool s_is_req_rx_cmd = false;
 
 #ifdef DEBUG_TEST
     dbg_test_main();
 #endif // DEBUG_TEST
 
 #ifdef DEBUG_UART_USE
-    /* USART1からコマンド受信時の処理 */
-    if (usart1_is_cmd_ready()) {
+    // コマンド処理
+    if (s_is_req_rx_cmd != true) {
         memset(&s_cmd_buf[0], 0, sizeof(s_cmd_buf));
-        usart1_get_cmd(s_cmd_buf, sizeof(s_cmd_buf));
+        APP_UsartReceive_IT(USART1, &s_cmd_buf[0], sizeof(s_cmd_buf));
+        s_is_req_rx_cmd = true;
+    }
+
+    if((g_uart_rx_done_flg == true) ||
+        ((g_rx_cnt == 0) && (s_is_req_rx_cmd != false)))
+    {
         dbg_cmd_exec(s_cmd_buf);
+        s_is_req_rx_cmd = false;
+        g_uart_rx_done_flg = false;
     }
 #endif // DEBUG_UART_USE
 

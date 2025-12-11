@@ -45,47 +45,7 @@
 /* Private function prototypes -----------------------------------------------*/
 
 /* Private user code ---------------------------------------------------------*/
-/* USART1受信バッファ */
-#define USART1_RX_BUFFER_SIZE    256
-static volatile uint8_t s_uart_rx_buf[USART1_RX_BUFFER_SIZE];
-static volatile uint16_t s_usart1_rx_head = 0;
-static volatile uint16_t s_usart1_rx_tail = 0;
-static volatile bool s_uart_cmd_flg = false;
 
-/**
- * @brief USART1受信コマンドを取得してバッファをクリア
- */
-void usart1_get_cmd(uint8_t *buf, uint16_t buf_size)
-{
-    uint16_t len = 0;
-    uint16_t pos = s_usart1_rx_tail;
-
-    /* コマンドバッファ内のデータを抽出 */
-    while (pos != s_usart1_rx_head && len < buf_size - 1) {
-        uint8_t ch = s_uart_rx_buf[pos];
-        if (ch == '\r' || ch == '\n') {
-            break;
-        }
-        buf[len++] = ch;
-        pos = (pos + 1) % USART1_RX_BUFFER_SIZE;
-    }
-    buf[len] = '\0';
-
-    /* テールポインタをデリミタの次に移動 */
-    if (pos != s_usart1_rx_head) {
-        s_usart1_rx_tail = (pos + 1) % USART1_RX_BUFFER_SIZE;
-    }
-
-    s_uart_cmd_flg = false;
-}
-
-/**
- * @brief USART1受信コマンドフラグを取得
- */
-bool usart1_is_cmd_ready(void)
-{
-    return s_uart_cmd_flg;
-}
 /* External variables --------------------------------------------------------*/
 extern bool g_is_rtc_alarm;
 
